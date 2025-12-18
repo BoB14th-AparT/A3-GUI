@@ -5,7 +5,7 @@
 AparT-A3 메인 윈도우
 """
 
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QStackedWidget,QLabel, QSizePolicy
+from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel, QProgressBar, QVBoxLayout, QHBoxLayout, QStackedWidget,QLabel, QSizePolicy,QApplication
 from PyQt5.QtCore import Qt, pyqtSignal, QSize, QTimer, QRect
 from gui.components.titlebar import create_titlebar
 from gui.components.left_sidebar import create_left_sidebar
@@ -24,7 +24,7 @@ class AparTa3GUI(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # QItemSelection 메타타입 등록
+        # ✅ QItemSelection 메타타입 등록
         try:
             from PyQt5.QtCore import QItemSelection, qRegisterMetaType
             qRegisterMetaType("QItemSelection")
@@ -58,14 +58,14 @@ class AparTa3GUI(QMainWindow):
         
         self.dialog = None
         self.device_info = {"model": "SM-N981N", "name": "SAMSUNG Galaxy Note20 5G"}  # 예시
-        self.case_path = None  # 사건 경로 저장
-        self.titlebar = None  # 타이틀바 참조 저장
+        self.case_path = None  # ← 추가: 사건 경로 저장
+        self.titlebar = None  # ← 추가: 타이틀바 참조 저장
         self.explorer_content = None
         self.loading_overlay = None
         self.case_created = False
         self._loading_mode = "case_init"  
 
-        # 백그라운드 연결 체크 타이머
+        # 추가: 백그라운드 연결 체크 타이머
         self.background_connection_timer = QTimer()
         self.background_connection_timer.timeout.connect(self.check_background_connection)
         self.background_connection_timer.start(5000)  # 5초마다 체크
@@ -81,7 +81,7 @@ class AparTa3GUI(QMainWindow):
         """새 사건 다이얼로그 열기"""
         if self.dialog is None:
             self.dialog = NewCaseDialog(self)
-            self.dialog.case_created.connect(self.on_case_created)  # 
+            self.dialog.case_created.connect(self.on_case_created)  # ← 추가
         self.dialog.show_dialog()
 
     def update_titlebar(self, case_path):
@@ -103,10 +103,10 @@ class AparTa3GUI(QMainWindow):
             self.acquisition_page.case_folder = case_path
             print(f"[+] case_folder updated: {case_path}")
 
-        # 로딩 화면 표시
+        # ✅ 로딩 화면 표시
         self.show_loading()
         
-        # 획득 정보 페이지로 전환 + 앱 로드
+        # ✅ 획득 정보 페이지로 전환 + 앱 로드
         #QTimer.singleShot(100, self.navigate_to_acquisition_and_load)
     
     def navigate_to_acquisition_and_load(self):
@@ -194,6 +194,13 @@ class AparTa3GUI(QMainWindow):
             if hasattr(explorer, 'load_device_data'):
                 explorer.load_device_data(self.device_info)
     
+    def append_overlay_log(self, message: str):
+        """전역 로딩 오버레이 로그에 한 줄 추가"""
+        if hasattr(self, "overlay_log") and self.loading_overlay and self.loading_overlay.isVisible():
+            self.overlay_log.append(message)
+            self.overlay_log.verticalScrollBar().setValue(self.overlay_log.verticalScrollBar().maximum())
+
+
     # ← 아래 함수 추가
     def show_explorer_page(self):
         """탐색기 페이지 표시"""
@@ -203,7 +210,7 @@ class AparTa3GUI(QMainWindow):
         self.middle_sidebar.setCurrentIndex(3)  # 탐색기 사이드바
         self.content_stack.setCurrentIndex(2)   # 탐색기 콘텐츠
 
-        # 탐색기에 기기 정보 전달 
+        # 탐색기에 기기 정보 전달 ← 추가
         if self.middle_sidebar.device_info:
             explorer = self.middle_sidebar.widget(3)
             if hasattr(explorer, 'load_device_data'):
@@ -237,12 +244,12 @@ class AparTa3GUI(QMainWindow):
 
     def check_background_connection(self):
         """백그라운드에서 5초마다 연결 체크"""
-        # 분석 중이면 체크 안 함
+        # ✅ 분석 중이면 체크 안 함
         if hasattr(self.acquisition_page, 'is_analyzing') and self.acquisition_page.is_analyzing:
             print("[+] 분석 진행 중 - 백그라운드 체크 스킵")
             return
         
-        # 현재 탐색기 탭이면 체크 안 함
+        # ✅ 현재 탐색기 탭이면 체크 안 함
         if self.content_stack.currentIndex() == 2:  # 탐색기 = 인덱스 2
             return
         
@@ -264,7 +271,7 @@ class AparTa3GUI(QMainWindow):
                     if device_info and self.middle_sidebar:
                         if self.middle_sidebar.device_info != device_info:
                             self.middle_sidebar.device_info = device_info
-                            # 페이지 전환 안 함! (세션 저장만)
+                            # ✅ 페이지 전환 안 함! (세션 저장만)
                             print(f"[백그라운드] 연결 감지됨 (세션 저장만)")
         
         except Exception as e:
@@ -292,7 +299,7 @@ class AparTa3GUI(QMainWindow):
         
         # 상단 타이틀바
         titlebar = create_titlebar()
-        self.titlebar = titlebar  # : 참조 저장
+        self.titlebar = titlebar  # ← 추가: 참조 저장
         main_layout.addWidget(titlebar)
         
         # 하단 3섹션 레이아웃
@@ -309,7 +316,7 @@ class AparTa3GUI(QMainWindow):
         self.middle_sidebar.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.middle_sidebar.setMinimumHeight(0)
         self.middle_sidebar.setMaximumHeight(16777215)  # (선택) 혹시 고정 maxheight 걸려있으면 풀기
-        # 새로고침 버튼에 수동 연결 체크 함수 연결
+        # ✅ 새로고침 버튼에 수동 연결 체크 함수 연결
         self.middle_sidebar.set_refresh_callback(self.manual_check_connection)
         content_layout.addWidget(self.middle_sidebar)
         
@@ -327,7 +334,7 @@ class AparTa3GUI(QMainWindow):
         self.content_stack.addWidget(self.acquisition_page)
 
         # ← 아래 2줄 추가: 탐색기 페이지
-        self.explorer_content = create_explorer_content()  # self.explorer_content로 저장
+        self.explorer_content = create_explorer_content()  # ✅ self.explorer_content로 저장
         self.content_stack.addWidget(self.explorer_content)
         content_layout.addWidget(self.content_stack)
         
@@ -381,16 +388,36 @@ class AparTa3GUI(QMainWindow):
         overlay_layout.setAlignment(Qt.AlignCenter)
         
         # 로딩 텍스트
-        loading_label = QLabel("획득 정보로 이동중입니다...")
-        loading_label.setStyleSheet("""
+        # 로딩 텍스트 (✅ 나중에 문구 바꾸려고 멤버로 저장)
+        self.loading_label = QLabel("획득 정보로 이동중입니다...")
+        self.loading_label.setStyleSheet("""
             font-size: 16px;
             color: white;
             background-color: transparent;
         """)
-        loading_label.setAlignment(Qt.AlignCenter)
-        overlay_layout.addWidget(loading_label)
-        
+        self.loading_label.setAlignment(Qt.AlignCenter)
+        overlay_layout.addWidget(self.loading_label)
+
         overlay_layout.addSpacing(30)  # 텍스트와 선 사이 간격
+
+        from PyQt5.QtWidgets import QTextBrowser
+        self.overlay_log = QTextBrowser()
+        self.overlay_log.setObjectName("overlay_log")
+        self.overlay_log.setMinimumHeight(220)
+        self.overlay_log.setMaximumHeight(260)
+        self.overlay_log.setStyleSheet("""
+            QTextBrowser {
+                background: rgba(0,0,0,120);
+                color: #EDEDED;
+               border: 1px solid rgba(255,255,255,60);
+                border-radius: 8px;
+                padding: 10px;
+                font-family: Consolas;
+                font-size: 12px;
+            }
+         """)
+        self.overlay_log.hide()
+        overlay_layout.addWidget(self.overlay_log)
 
         # 로딩 바 컨테이너를 오버레이의 자식으로 직접 생성
         self.loading_bar_container = QWidget(self.loading_overlay)
@@ -418,11 +445,20 @@ class AparTa3GUI(QMainWindow):
         self.loading_direction = True  # True: 왼→오, False: 오→왼
         self.loading_animation.finished.connect(self.reverse_loading_animation)
 
-    def show_loading(self, mode="case_init"):
+    def show_loading(self, mode="case_init", message=None):
         """로딩 화면 표시"""
-        self._loading_mode = mode  
+        self._loading_mode = mode
         self.loading_overlay.setGeometry(self.rect())
-        
+
+        if hasattr(self, "overlay_log"):
+            self.overlay_log.clear()
+            # analysis일 때만 로그 박스 표시
+            self.overlay_log.setVisible(mode == "analysis")
+
+        # ✅ 문구 변경 가능
+        if message is not None and hasattr(self, "loading_label"):
+            self.loading_label.setText(message)
+
         # 컨테이너를 화면 중앙에 배치 (전체 너비)
         container_width = self.width()
         container_y = int(self.height() / 2)
@@ -430,54 +466,55 @@ class AparTa3GUI(QMainWindow):
 
         # 배경 바 크기 설정 (컨테이너 전체 너비)
         self.loading_bg.setGeometry(0, 0, container_width, 4)
-        
-        # 초기 애니메이션 설정 (짧은 바가 왼쪽→오른쪽 이동)
-        bar_width = int(container_width * 0.15)  # 15% 너비 (짧은 바)
+
+        # 초기 애니메이션 설정
+        bar_width = int(container_width * 0.15)
         self.loading_animation.setStartValue(QRect(0, 0, bar_width, 4))
         self.loading_animation.setEndValue(QRect(container_width - bar_width, 0, bar_width, 4))
-        
-        # 최상위로 올리기 (탭 전환 후에도 보이도록)
+
+        # ✅ 최상위로 올리기
         self.loading_overlay.raise_()
         self.loading_overlay.show()
-        
+
+        # ✅ “획득정보에서 즉시 뜨게” (메인스레드가 잠깐이라도 바쁘면 안 보일 수 있음)
+        QApplication.processEvents()
+
         self.loading_direction = True
         self.loading_round_count = 0
         self.loading_animation.start()
 
+
     def reverse_loading_animation(self):
         """로딩 애니메이션 방향 전환"""
-        #  왕복 횟수 체크
         if not hasattr(self, 'loading_round_count'):
             self.loading_round_count = 0
-        
-        self.loading_round_count += 1
 
+        # ✅ analysis 모드는 “끝날 때까지 무한” (자동 stop 금지)
+        if getattr(self, "_loading_mode", "case_init") != "analysis":
+            self.loading_round_count += 1
 
-        # 4번 방향 전환 = 2번 왕복 (왼→오→왼→오)
-        if self.loading_round_count >= 4:
-            self.loading_animation.stop()
-            self.loading_round_count = 0
+            # ✅ 2번 왕복 후 종료 + case_init이면 획득정보 이동
+            if self.loading_round_count >= 4:
+                self.loading_animation.stop()
+                self.loading_round_count = 0
 
-            # case_init 로딩일 때만: 기존처럼 획득정보로 자동 이동 + 앱 로드
-            if getattr(self, "_loading_mode", "case_init") == "case_init":
-                QTimer.singleShot(100, self.navigate_to_acquisition_and_load)
-            # analysis 로딩이면: 절대 페이지 전환 안 함 (탐색기 탭 유지)
-            return
+                if getattr(self, "_loading_mode", "case_init") == "case_init":
+                    QTimer.singleShot(100, self.navigate_to_acquisition_and_load)
+                return
 
         container_width = self.loading_bg.width()
-        bar_width = int(container_width * 0.15)  # 15% 너비
-        
+        bar_width = int(container_width * 0.15)
+
         if self.loading_direction:
-            # 오른쪽 → 왼쪽
             self.loading_animation.setStartValue(QRect(container_width - bar_width, 0, bar_width, 4))
             self.loading_animation.setEndValue(QRect(0, 0, bar_width, 4))
         else:
-            # 왼쪽 → 오른쪽
             self.loading_animation.setStartValue(QRect(0, 0, bar_width, 4))
             self.loading_animation.setEndValue(QRect(container_width - bar_width, 0, bar_width, 4))
-        
+
         self.loading_direction = not self.loading_direction
         self.loading_animation.start()
+
 
     def hide_loading(self):
         """로딩 화면 숨김"""
@@ -492,7 +529,7 @@ class AparTa3GUI(QMainWindow):
             
             # 로딩 중일 때 컨테이너와 바 크기도 업데이트
             if self.loading_overlay.isVisible():
-                # 최상위로 다시 올리기
+                # ✅ 최상위로 다시 올리기
                 self.loading_overlay.raise_()
                 
                 container_width = self.width()
@@ -511,3 +548,37 @@ class AparTa3GUI(QMainWindow):
                         self.loading_animation.setStartValue(QRect(container_width - bar_width, 0, bar_width, 4))
                         self.loading_animation.setEndValue(QRect(0, 0, bar_width, 4))
                     self.loading_animation.start()
+
+    def start_analysis_loading_and_go_explorer(self, package_name: str):
+        """
+        1) 획득정보에서 로딩 즉시 표시
+        2) 탐색기로 전환
+        3) (로그는 오버레이 overlay_log에만 표시)
+        """
+        self.show_loading(mode="analysis", message=f"{package_name} 분석 중입니다.")
+        self.show_explorer_page()
+
+    def append_analysis_log(self, msg: str):
+        """분석 로그를 전역 오버레이(overlay_log)에 누적"""
+        if not msg:
+            return
+        if hasattr(self, "overlay_log") and self.overlay_log.isVisible():
+            self.overlay_log.append(msg)
+
+    def finish_analysis_loading(self):
+        """분석 종료 시 로딩 닫기"""
+        self.hide_loading()
+
+
+    def append_analysis_log(self, msg: str):
+        """분석 로그를 탐색기 로딩 UI(loading_log)에 누적"""
+        if not msg:
+            return
+        if self.explorer_content and hasattr(self.explorer_content, "append_loading_log"):
+            self.explorer_content.append_loading_log(msg)
+
+    def finish_analysis_loading(self):
+        """분석 종료 시 로딩 닫기"""
+        self.hide_loading()
+        if self.explorer_content and hasattr(self.explorer_content, "clear_loading_state"):
+            self.explorer_content.clear_loading_state()
