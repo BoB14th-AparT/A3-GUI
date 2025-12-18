@@ -3,11 +3,8 @@
 ## main_content.py
 """메인 콘텐츠 영역 컴포넌트"""
 
-from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QComboBox, QTextBrowser, QFrame, QScrollArea,
-    QSplitter, QTabWidget
-)
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QComboBox, QTextBrowser, QFrame, QScrollArea, QSplitter)
 from PyQt5.QtCore import Qt
 import os
 
@@ -383,23 +380,23 @@ class ExplorerContent(QWidget):
         """로딩 상태 표시"""
         from PyQt5.QtWidgets import QTableWidgetItem
         from PyQt5.QtCore import Qt
-        
+
         print(f"[+] 탐색기 로딩 상태 표시: {package_name}")
-        
+
         # 목록 탭
         self.left_table.setRowCount(1)
         self.right_table.setRowCount(1)
-        
+
         loading_item = QTableWidgetItem(f"📊 {package_name} 분석 중...")
         loading_item.setTextAlignment(Qt.AlignCenter)
         self.left_table.setSpan(0, 0, 1, 3)
         self.left_table.setItem(0, 0, loading_item)
-        
+
         loading_item2 = QTableWidgetItem("분석 진행 중...")
         loading_item2.setTextAlignment(Qt.AlignCenter)
         self.right_table.setSpan(0, 0, 1, 3)
         self.right_table.setItem(0, 0, loading_item2)
-        
+
         # 스코어링 탭
         self.scoring_table.setRowCount(1)
         scoring_loading = QTableWidgetItem("⏳ 분석 진행 중...")
@@ -407,18 +404,19 @@ class ExplorerContent(QWidget):
         self.scoring_table.setSpan(0, 0, 1, 8)
         self.scoring_table.setItem(0, 0, scoring_loading)
 
-        #  로그 박스 초기화 + 표시
-        if hasattr(self, "loading_log"):
-            self.loading_log.setVisible(True)
-            self.loading_log.append(f"[+] {package_name} 분석 시작")
+        # 임시파일 탭
+        self.temp_file_table.setRowCount(1)
+        temp_loading = QTableWidgetItem("⏳ 분석 진행 중...")
+        temp_loading.setTextAlignment(Qt.AlignCenter)
+        self.temp_file_table.setSpan(0, 0, 1, 4)
+        self.temp_file_table.setItem(0, 0, temp_loading)
 
-
-    def append_loading_log(self, message: str):
-        """A안: 분석 진행 로그를 탐색기 내부에 누적"""
-        if not hasattr(self, "loading_log"):
-            return
-        if not self.loading_log.isVisible():
-            self.loading_log.setVisible(True)
+        # 유사 어플 탭
+        self.similar_app_table.setRowCount(1)
+        similar_loading = QTableWidgetItem("⏳ 분석 진행 중...")
+        similar_loading.setTextAlignment(Qt.AlignCenter)
+        self.similar_app_table.setSpan(0, 0, 1, 5)
+        self.similar_app_table.setItem(0, 0, similar_loading)
 
     def clear_loading_state(self):
         """로딩 상태 해제"""
@@ -426,24 +424,23 @@ class ExplorerContent(QWidget):
         self.left_table.clearSpans()
         self.right_table.clearSpans()
         self.scoring_table.clearSpans()
+        self.temp_file_table.clearSpans()
+        self.similar_app_table.clearSpans()
         self.left_table.setRowCount(0)
         self.right_table.setRowCount(0)
         self.scoring_table.setRowCount(0)
-
-        #  로그 박스 숨김
-        if hasattr(self, "loading_log"):
-            self.loading_log.setVisible(False)
-
+        self.temp_file_table.setRowCount(0)
+        self.similar_app_table.setRowCount(0)
 
     # main_content.py의 ExplorerContent 클래스에 추가
 
     def load_analysis_results(self, result):
         """분석 결과 자동 로드"""
         print("[+] 탐색기에 결과 로드 시작")
-        
+
         # 로딩 상태 해제
         self.clear_loading_state()
-        
+
         # 1. 목록 탭 로드
         merged_csv = result.get('merged')
         if merged_csv and os.path.exists(merged_csv):
@@ -451,7 +448,7 @@ class ExplorerContent(QWidget):
             self.load_list_table(merged_csv)
         else:
             print(f"[WARN] Merged CSV 없음: {merged_csv}")
-        
+
         # 2. 스코어링 탭 로드
         scored_csv = result.get('scored')
         if scored_csv and os.path.exists(scored_csv):
@@ -459,7 +456,26 @@ class ExplorerContent(QWidget):
             self.load_scoring_table_from_csv(scored_csv)
         else:
             print(f"[WARN] Scored CSV 없음: {scored_csv}")
-        
+
+        # 3. 임시파일 탭 로드
+        dynamic_csv = result.get('dynamic')
+        if dynamic_csv and os.path.exists(dynamic_csv):
+            print(f"[+] Dynamic CSV에서 임시파일 로드: {dynamic_csv}")
+            self.load_temp_files(dynamic_csv)
+        elif merged_csv and os.path.exists(merged_csv):
+            print(f"[+] Merged CSV에서 임시파일 로드: {merged_csv}")
+            self.load_temp_files(merged_csv)
+        else:
+            print(f"[WARN] 임시파일 로드할 CSV 없음")
+
+        # 4. 유사 어플 탭 로드
+        if merged_csv and os.path.exists(merged_csv):
+            package_name = result.get('package', '')
+            print(f"[+] 유사 어플 분석 시작: {package_name}")
+            self.load_similar_apps(merged_csv, package_name)
+        else:
+            print(f"[WARN] 유사 어플 로드할 CSV 없음")
+
         print("[+] 탐색기 결과 로드 완료")
 
     def setup_ui(self):
@@ -477,13 +493,13 @@ class ExplorerContent(QWidget):
             }
         """)
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(14, 12, 14, 14)
-        card_layout.setSpacing(10)
+        card_layout.setContentsMargins(0, 0, 0, 0)
+        card_layout.setSpacing(0)
 
-        # ✅ (중요) self.tabs 를 먼저 만든다
+        # ✅ 탭(목록/스코어링)
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
-        self.tabs.setStyleSheet(self._tabs_qss())
+        self.tabs.setStyleSheet(self._tabs_qss())  # 아래 2)에서 함수로 분리할거야
 
         # -------------------------
         # 탭1) 목록
@@ -493,7 +509,10 @@ class ExplorerContent(QWidget):
         list_layout.setContentsMargins(0, 0, 0, 0)
         list_layout.setSpacing(0)
 
+        # ✅ 탭 바로 아래 검색바 (첨부 2번째 느낌)
         list_layout.addWidget(self.create_search_bar(), 0)
+
+        # 테이블
         list_layout.addWidget(self.create_list_tables(), 1)
         self.tabs.addTab(list_tab, "목록")
 
@@ -505,33 +524,40 @@ class ExplorerContent(QWidget):
         scoring_layout.setContentsMargins(0, 0, 0, 0)
         scoring_layout.setSpacing(0)
 
-        scoring_layout.addWidget(self.create_search_bar(), 0)
+        scoring_layout.addWidget(self.create_search_bar(), 0)   # ✅ 스코어링도 동일 검색바
         self.scoring_table = self.create_scoring_table()
         scoring_layout.addWidget(self.scoring_table, 1)
         self.tabs.addTab(scoring_tab, "스코어링")
 
-        # ✅ 로딩 로그 박스
-        self.loading_log = QTextBrowser()
-        self.loading_log.setVisible(False)
-        self.loading_log.setFixedHeight(140)
-        self.loading_log.setStyleSheet("""
-            QTextBrowser {
-                background: #0f172a;
-                color: #e5e7eb;
-                border: none;
-                border-top: 1px solid #e6e6e6;
-                padding: 8px;
-                font-size: 11px;
-            }
-        """)
+        # -------------------------
+        # 탭3) 임시파일
+        # -------------------------
+        temp_file_tab = QWidget()
+        temp_file_layout = QVBoxLayout(temp_file_tab)
+        temp_file_layout.setContentsMargins(0, 0, 0, 0)
+        temp_file_layout.setSpacing(0)
 
-        # ✅ 카드에 탭 + 로그 올리기
+        temp_file_layout.addWidget(self.create_search_bar(), 0)
+        self.temp_file_table = self.create_temp_file_table()
+        temp_file_layout.addWidget(self.temp_file_table, 1)
+        self.tabs.addTab(temp_file_tab, "임시파일")
+
+        # -------------------------
+        # 탭4) 유사 어플
+        # -------------------------
+        similar_app_tab = QWidget()
+        similar_app_layout = QVBoxLayout(similar_app_tab)
+        similar_app_layout.setContentsMargins(0, 0, 0, 0)
+        similar_app_layout.setSpacing(0)
+
+        similar_app_layout.addWidget(self.create_search_bar(), 0)
+        self.similar_app_table = self.create_similar_app_table()
+        similar_app_layout.addWidget(self.similar_app_table, 1)
+        self.tabs.addTab(similar_app_tab, "유사 어플")
+
+        # ✅ 카드에 탭을 올리기
         card_layout.addWidget(self.tabs, 1)
-        card_layout.addWidget(self.loading_log, 0)
-
-        # ✅ 루트에 카드 추가
         root.addWidget(card, 1)
-
 
     def create_scoring_table(self):
         table = QTableWidget()
@@ -556,7 +582,7 @@ class ExplorerContent(QWidget):
         header.setMinimumHeight(24)
         header.setFixedHeight(24)
 
-        #  추가 (핵심)
+        # ✅ 추가 (핵심)
         header.setHighlightSections(False)
         table.setSortingEnabled(False)
 
@@ -570,6 +596,83 @@ class ExplorerContent(QWidget):
         table.setColumnWidth(5, 80)
         table.setColumnWidth(6, 80)
         table.setColumnWidth(7, 60)
+
+        table.setShowGrid(True)
+        table.setGridStyle(Qt.SolidLine)
+
+        return table
+
+    def create_temp_file_table(self):
+        """임시파일 테이블 생성"""
+        table = QTableWidget()
+        table.setColumnCount(4)
+        table.setHorizontalHeaderLabels([
+            "No.", "파일명", "경로", "타입"
+        ])
+
+        table.setStyleSheet(self._table_qss_dense())
+        table.setAlternatingRowColors(True)
+
+        table.verticalHeader().setVisible(False)
+        table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        table.setSelectionMode(QAbstractItemView.SingleSelection)
+        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        header = table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.Interactive)
+        header.setStretchLastSection(True)
+        header.setDefaultAlignment(Qt.AlignCenter)
+        header.setMinimumHeight(24)
+        header.setFixedHeight(24)
+
+        header.setHighlightSections(False)
+        table.setSortingEnabled(False)
+
+        table.verticalHeader().setDefaultSectionSize(28)
+
+        table.setColumnWidth(0, 60)
+        table.setColumnWidth(1, 200)
+        table.setColumnWidth(2, 400)
+        table.setColumnWidth(3, 120)
+
+        table.setShowGrid(True)
+        table.setGridStyle(Qt.SolidLine)
+
+        return table
+
+    def create_similar_app_table(self):
+        """유사 어플 테이블 생성"""
+        table = QTableWidget()
+        table.setColumnCount(5)
+        table.setHorizontalHeaderLabels([
+            "No.", "패키지명", "유사도 (%)", "공통 경로 수", "경로"
+        ])
+
+        table.setStyleSheet(self._table_qss_dense())
+        table.setAlternatingRowColors(True)
+
+        table.verticalHeader().setVisible(False)
+        table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        table.setSelectionMode(QAbstractItemView.SingleSelection)
+        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        header = table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.Interactive)
+        header.setStretchLastSection(True)
+        header.setDefaultAlignment(Qt.AlignCenter)
+        header.setMinimumHeight(24)
+        header.setFixedHeight(24)
+
+        header.setHighlightSections(False)
+        table.setSortingEnabled(False)
+
+        table.verticalHeader().setDefaultSectionSize(28)
+
+        table.setColumnWidth(0, 60)
+        table.setColumnWidth(1, 250)
+        table.setColumnWidth(2, 120)
+        table.setColumnWidth(3, 120)
+        table.setColumnWidth(4, 350)
 
         table.setShowGrid(True)
         table.setGridStyle(Qt.SolidLine)
@@ -747,7 +850,7 @@ class ExplorerContent(QWidget):
     
 
     def create_left_table(self):
-        """왼쪽 테이블 생성 (체크박스, No., 이름)  고정 3컬럼"""
+        """왼쪽 테이블 생성 (체크박스, No., 이름) ✅ 고정 3컬럼"""
         table = QTableWidget()
         table.setColumnCount(3)
         table.setHorizontalHeaderLabels(["", "No.", "이름"])
@@ -758,7 +861,7 @@ class ExplorerContent(QWidget):
         header.setSectionResizeMode(QHeaderView.Fixed)
         header.setDefaultAlignment(Qt.AlignCenter)
 
-        #  추가 (핵심)
+        # ✅ 추가 (핵심)
         header.setHighlightSections(False)
         table.setSortingEnabled(False)
 
@@ -771,13 +874,13 @@ class ExplorerContent(QWidget):
         table.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         table.verticalHeader().setVisible(False)
-        table.verticalHeader().setDefaultSectionSize(22)     #  촘촘
+        table.verticalHeader().setDefaultSectionSize(22)     # ✅ 촘촘
         table.setAlternatingRowColors(True)
 
-        #  왼쪽은 고정이므로 가로 스크롤은 끔
+        # ✅ 왼쪽은 고정이므로 가로 스크롤은 끔
         table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        #  폭 고정(체크/No/이름)
+        # ✅ 폭 고정(체크/No/이름)
         table.setMinimumWidth(30 + 50 + 180 + 2)
         table.setMaximumWidth(30 + 50 + 180 + 2)
 
@@ -788,7 +891,7 @@ class ExplorerContent(QWidget):
 
     
     def create_right_table(self):
-        """오른쪽 테이블 생성 (경로/종류/속성)  경로를 가로로 더 넓게"""
+        """오른쪽 테이블 생성 (경로/종류/속성) ✅ 경로를 가로로 더 넓게"""
         table = QTableWidget()
         table.setColumnCount(3)
         table.setHorizontalHeaderLabels(["경로", "종류", "속성"])
@@ -798,7 +901,7 @@ class ExplorerContent(QWidget):
         header.setMinimumHeight(24)
         header.setFixedHeight(24)
 
-        #  추가 (핵심)
+        # ✅ 추가 (핵심)
         header.setHighlightSections(False)
         table.setSortingEnabled(False)
 
@@ -806,11 +909,11 @@ class ExplorerContent(QWidget):
         table.verticalHeader().setDefaultSectionSize(28)
 
 
-        #  경로(0)만 넓게: Stretch
+        # ✅ 경로(0)만 넓게: Stretch
         header.setSectionResizeMode(QHeaderView.Fixed)
         header.setSectionResizeMode(0, QHeaderView.Stretch)
 
-        #  종류/속성은 고정 폭
+        # ✅ 종류/속성은 고정 폭
         table.setColumnWidth(1, 90)   # 종류
         table.setColumnWidth(2, 90)   # 속성
 
@@ -818,10 +921,10 @@ class ExplorerContent(QWidget):
         table.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         table.verticalHeader().setVisible(False)
-        table.verticalHeader().setDefaultSectionSize(22)  #  촘촘
+        table.verticalHeader().setDefaultSectionSize(22)  # ✅ 촘촘
         table.setAlternatingRowColors(True)
 
-        #  오른쪽은 가로 스크롤(필요 시)
+        # ✅ 오른쪽은 가로 스크롤(필요 시)
         table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
         table.setShowGrid(True)
@@ -845,7 +948,7 @@ class ExplorerContent(QWidget):
                 border: none;
             }
 
-            /*  너가 원하는 클릭 하이라이트 색 */
+            /* ✅ 너가 원하는 클릭 하이라이트 색 */
             QTableWidget::item:selected {
                 background-color: #FFDB97;
                 color: #111;
@@ -861,7 +964,7 @@ class ExplorerContent(QWidget):
                 border-bottom: 1px solid #1E3A52;
             }
 
-            /*  핵심: “눌림/선택/호버” 상태에서도 색이 절대 안 바뀌게 고정 */
+            /* ✅ 핵심: “눌림/선택/호버” 상태에서도 색이 절대 안 바뀌게 고정 */
             QHeaderView::section:pressed,
             QHeaderView::section:selected,
             QHeaderView::section:hover {
@@ -883,23 +986,23 @@ class ExplorerContent(QWidget):
         self.left_table = self.create_left_table()      # 기존 함수 재사용
         self.right_table = self.create_right_table()    # 기존 함수 재사용
 
-        #  왼쪽은 '고정' 느낌: 가로 스크롤 끄기
+        # ✅ 왼쪽은 '고정' 느낌: 가로 스크롤 끄기
         self.left_table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        #  오른쪽은 가로 스크롤 항상 보이게(두번째 스샷 느낌)
+        # ✅ 오른쪽은 가로 스크롤 항상 보이게(두번째 스샷 느낌)
         self.right_table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
-        #  촘촘한 스타일 적용
+        # ✅ 촘촘한 스타일 적용
         self.left_table.setAlternatingRowColors(True)
         self.right_table.setAlternatingRowColors(True)
         self.left_table.setStyleSheet(self._table_qss_dense())
         self.right_table.setStyleSheet(self._table_qss_dense())
 
-        #  행 높이(두번째 스샷 느낌)
+        # ✅ 행 높이(두번째 스샷 느낌)
         self.left_table.verticalHeader().setDefaultSectionSize(22)
         self.right_table.verticalHeader().setDefaultSectionSize(22)
 
-        #  세로 스크롤 동기화
+        # ✅ 세로 스크롤 동기화
         self.left_table.verticalScrollBar().valueChanged.connect(
             self.right_table.verticalScrollBar().setValue
         )
@@ -907,7 +1010,7 @@ class ExplorerContent(QWidget):
             self.left_table.verticalScrollBar().setValue
         )
 
-        #  선택 동기화
+        # ✅ 선택 동기화
         self.left_table.selectionModel().selectionChanged.connect(self.sync_selection_left_to_right)
         self.right_table.selectionModel().selectionChanged.connect(self.sync_selection_right_to_left)
 
@@ -1399,7 +1502,7 @@ class ExplorerContent(QWidget):
     def get_tier_color(self, tier):
         """티어별 색상 반환"""
         from PyQt5.QtGui import QColor
-        
+
         colors = {
             1: QColor(255, 230, 230),
             2: QColor(255, 244, 230),
@@ -1407,6 +1510,195 @@ class ExplorerContent(QWidget):
             4: QColor(240, 240, 240)
         }
         return colors.get(tier, QColor(255, 255, 255))
+
+    def load_temp_files(self, csv_path):
+        """임시파일 탭 로드 (.journal, .wal 등)"""
+        import pandas as pd
+        from PyQt5.QtWidgets import QTableWidgetItem
+        from PyQt5.QtCore import Qt
+
+        try:
+            df = pd.read_csv(csv_path)
+
+            if df.empty:
+                print("[WARN] CSV 파일이 비어있습니다")
+                return False
+
+            path_col = df.columns[0]
+            paths = df[path_col].dropna().tolist()
+
+            # 임시파일 패턴 정의
+            temp_patterns = [
+                '.journal', '.wal', '.db-journal', '.db-wal',
+                '-journal', '-wal', '.tmp', '.temp', '.cache',
+                '.lock', '.bak', '.old', '.swp', '~'
+            ]
+
+            # 임시파일 필터링
+            temp_files = []
+            for path in paths:
+                path_str = str(path)
+                for pattern in temp_patterns:
+                    if pattern in path_str.lower():
+                        temp_type = pattern.strip('.-')
+                        file_name = os.path.basename(path_str) if path_str else ""
+                        temp_files.append({
+                            'name': file_name,
+                            'path': path_str,
+                            'type': temp_type.upper()
+                        })
+                        break
+
+            # 테이블에 표시
+            n = len(temp_files)
+            self.temp_file_table.setRowCount(n)
+
+            for row, temp_file in enumerate(temp_files):
+                # No.
+                no_item = QTableWidgetItem(str(row + 1))
+                no_item.setTextAlignment(Qt.AlignCenter)
+                self.temp_file_table.setItem(row, 0, no_item)
+
+                # 파일명
+                name_item = QTableWidgetItem(temp_file['name'])
+                self.temp_file_table.setItem(row, 1, name_item)
+
+                # 경로
+                path_item = QTableWidgetItem(temp_file['path'])
+                self.temp_file_table.setItem(row, 2, path_item)
+
+                # 타입
+                type_item = QTableWidgetItem(temp_file['type'])
+                type_item.setTextAlignment(Qt.AlignCenter)
+                self.temp_file_table.setItem(row, 3, type_item)
+
+            print(f"[+] 임시파일 {n}개 로드 완료")
+            return True
+
+        except Exception as e:
+            print(f"[ERROR] 임시파일 로드 실패: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    def load_similar_apps(self, merged_csv, current_package):
+        """유사 어플 탭 로드 (경로 유사도 분석)"""
+        import pandas as pd
+        from PyQt5.QtWidgets import QTableWidgetItem
+        from PyQt5.QtCore import Qt
+        from pathlib import Path
+
+        try:
+            # 현재 분석 결과 로드
+            df_current = pd.read_csv(merged_csv)
+            if df_current.empty:
+                print("[WARN] 현재 분석 결과가 비어있습니다")
+                return False
+
+            path_col = df_current.columns[0]
+            current_paths = set(df_current[path_col].dropna().astype(str).tolist())
+
+            print(f"[+] 현재 APK 경로 수: {len(current_paths)}")
+
+            # A3-results 디렉토리 경로
+            current_file = Path(__file__).resolve()
+            a3_results_dir = current_file.parent.parent.parent / "Logic" / "A3-results"
+
+            if not a3_results_dir.exists():
+                print(f"[WARN] A3-results 디렉토리가 없습니다: {a3_results_dir}")
+                return False
+
+            # A3-results의 모든 CSV 파일 로드
+            similar_apps = []
+            csv_files = list(a3_results_dir.glob("static_*.csv"))
+
+            print(f"[+] A3-results에서 {len(csv_files)}개 CSV 파일 발견")
+
+            for csv_file in csv_files:
+                # 패키지명 추출 (파일명에서)
+                filename = csv_file.stem  # static_com.facebook.katana_result
+                if filename.startswith('static_'):
+                    package_name = filename[7:]  # com.facebook.katana_result
+                    if package_name.endswith('_result'):
+                        package_name = package_name[:-7]  # com.facebook.katana
+                else:
+                    package_name = filename
+
+                # 현재 패키지와 같으면 스킵
+                if package_name == current_package:
+                    continue
+
+                try:
+                    df_compare = pd.read_csv(csv_file)
+                    if df_compare.empty:
+                        continue
+
+                    compare_col = df_compare.columns[0]
+                    compare_paths = set(df_compare[compare_col].dropna().astype(str).tolist())
+
+                    # 유사도 계산
+                    common_paths = current_paths.intersection(compare_paths)
+                    common_count = len(common_paths)
+
+                    # Jaccard 유사도 (0~100%)
+                    union_count = len(current_paths.union(compare_paths))
+                    if union_count > 0:
+                        similarity = (common_count / union_count) * 100
+                    else:
+                        similarity = 0.0
+
+                    # 일정 유사도 이상만 추가 (예: 5% 이상)
+                    if similarity >= 5.0:
+                        similar_apps.append({
+                            'package': package_name,
+                            'similarity': similarity,
+                            'common_count': common_count,
+                            'csv_path': str(csv_file)
+                        })
+
+                except Exception as e:
+                    print(f"[WARN] {csv_file.name} 처리 실패: {e}")
+                    continue
+
+            # 유사도 높은 순으로 정렬
+            similar_apps.sort(key=lambda x: x['similarity'], reverse=True)
+
+            # 테이블에 표시
+            n = len(similar_apps)
+            self.similar_app_table.setRowCount(n)
+
+            for row, app in enumerate(similar_apps):
+                # No.
+                no_item = QTableWidgetItem(str(row + 1))
+                no_item.setTextAlignment(Qt.AlignCenter)
+                self.similar_app_table.setItem(row, 0, no_item)
+
+                # 패키지명
+                pkg_item = QTableWidgetItem(app['package'])
+                self.similar_app_table.setItem(row, 1, pkg_item)
+
+                # 유사도
+                sim_item = QTableWidgetItem(f"{app['similarity']:.2f}")
+                sim_item.setTextAlignment(Qt.AlignCenter)
+                self.similar_app_table.setItem(row, 2, sim_item)
+
+                # 공통 경로 수
+                count_item = QTableWidgetItem(str(app['common_count']))
+                count_item.setTextAlignment(Qt.AlignCenter)
+                self.similar_app_table.setItem(row, 3, count_item)
+
+                # CSV 경로
+                path_item = QTableWidgetItem(app['csv_path'])
+                self.similar_app_table.setItem(row, 4, path_item)
+
+            print(f"[+] 유사 어플 {n}개 로드 완료 (유사도 5% 이상)")
+            return True
+
+        except Exception as e:
+            print(f"[ERROR] 유사 어플 로드 실패: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
 
 def create_explorer_content():
     """탐색기 콘텐츠 생성"""
