@@ -1,0 +1,333 @@
+# ===================================================================
+# SINKS
+# - 중복 제거, Source API 제거, 노이즈 유발 싱크(execSQL, write 등) 제거
+
+# SINKS (HARD SINKS ONLY — 실제 I/O 지점)
+# ---- File I/O (생성자; File/String 둘 다) ----
+re:^Ljava/io/FileOutputStream;-><init>\(Ljava/io/File;.*\)V$
+re:^Ljava/io/FileOutputStream;-><init>\(Ljava/lang/String;.*\)V$
+re:^Ljava/io/FileInputStream;-><init>\(Ljava/io/File;.*\)V$
+re:^Ljava/io/FileInputStream;-><init>\(Ljava/lang/String;.*\)V$
+re:^Ljava/io/FileWriter;-><init>\(Ljava/io/File;.*\)V$
+re:^Ljava/io/FileWriter;-><init>\(Ljava/lang/String;.*\)V$
+re:^Ljava/io/FileReader;-><init>\(Ljava/io/File;.*\)V$
+re:^Ljava/io/FileReader;-><init>\(Ljava/lang/String;.*\)V$
+re:^Ljava/io/RandomAccessFile;-><init>\(Ljava/io/File;.*\)V$
+re:^Ljava/io/RandomAccessFile;-><init>\(Ljava/lang/String;.*\).*$
+# ---- Android Context 직통 I/O ----
+re:^Landroid/content/Context;->openFileOutput\(Ljava/lang/String;I\)Ljava/io/FileOutputStream;$
+re:^Landroid/content/Context;->openFileInput\(Ljava/lang/String;\)Ljava/io/FileInputStream;$
+# ---- SQLite / DB / Room (경로를 인자로 받는 API) ----
+# [수정] execSQL, query, insert 등은 노이즈 유발로 제거. 경로 기반 API만 유지.
+re:^L[^;]+;->open\(Ljava/lang/String;.*\).*$          # openDatabase(String, ...)
+re:^L[^;]+;->openOrCreateDatabase\(Ljava/lang/String;.*\).*$
+re:^Landroid/database/sqlite/SQLiteDatabase;->openDatabase\(Ljava/lang/String;.*\)Landroid/database/sqlite/SQLiteDatabase;$
+re:^Lnet/sqlcipher/database/SQLiteDatabase;->openDatabase\(Ljava/lang/String;.*\)Lnet/sqlcipher/database/SQLiteDatabase;$
+re:^Lnet/sqlcipher/database/SQLiteDatabase;->openOrCreateDatabase\(Ljava/lang/String;.*\)Lnet/sqlcipher/database/SQLiteDatabase;$
+# [수정] databaseBuilder는 경로 문자열(arg3)을 받는 핵심 Sink임
+re:^Landroidx/room/Room;->databaseBuilder\(Landroid/content/Context;Ljava/lang/Class;Ljava/lang/String;\)Landroidx/room/RoomDatabase\$Builder;$
+re:^Landroidx/room/RoomDatabase\$Builder;->build\(\)Landroidx/room/RoomDatabase;$
+# ---- SharedPreferences ----
+# [수정] 더 포괄적인 정규식 하나로 통합
+re:^Landroid/content/SharedPreferences\$Editor;->put(Boolean|Float|Int|Long|String|StringSet)\(.*\)Landroid/content/SharedPreferences\$Editor;$
+Landroid/content/SharedPreferences$Editor;->apply()V
+Landroid/content/SharedPreferences$Editor;->commit()Z
+# ---- 대표 캐시 라이브러리 (File 객체를 받는 생성자) ----
+re:^Lokhttp3/Cache;-><init>\(Ljava/io/File;J\)V$
+# [수정] L.*; -> L[^;]+; 로 수정하여 Smali 형식에 맞춤
+re:^Lcom/google/android/exoplayer2/.*cache/SimpleCache;-><init>\(Ljava/io/File;L[^;]+;J\)V$
+re:^Lcom/google/android/exoplayer2/.*cache/.*Cache;-><init>\(Ljava/io/File;.*J\)V$
+re:^Lcom/bumptech/glide/.*cache/.*;-><init>\(Ljava/io/File;.*\)V$
+re:^Lcoil/.*disk.*DiskCache;-><init>\(Ljava/io/File;.*\).*$
+re:^L.*coil.*cache.*;-><init>\(Ljava/io/File;.*\)V$
+re:^L.*picasso.*cache.*;-><init>\(Ljava/io/File;.*\)V$
+re:^L.*fresco.*cache.*;-><init>\(Ljava/io/File;.*\)V$
+re:^L.*squareup.*okhttp3.*Cache;-><init>\(Ljava/io/File;J\)V$
+# [수정] 매우 광범위하지만 사용자가 포함한 규칙
+re:^L.*[cC]ache.*;-><init>\(Ljava/io/File;.*\)V$
+re:^L.*[dD]isk.*;-><init>\(Ljava/io/File;.*\)V$
+# ---- [EXTRA] 필수 패턴 보강 (중복 제거됨) ----
+re:^Ljava/io/File;-><init>\(Ljava/lang/String;\)V$
+re:^Ljava/io/File;-><init>\(Ljava/io/File;Ljava/lang/String;\)V$
+Ljava/io/File;-><init>(Ljava/lang/String;Ljava/lang/String;)V
+Ljava/io/File;->createNewFile()Z
+# ---- NIO / ContentResolver (경로/URI 기반) ----
+re:^Ljava/nio/file/Files;->(newOutputStream|newInputStream|write|readAllBytes)\(.*\).*$
+re:^Ljava/nio/file/Paths;->get\(Ljava/lang/String;(\[Ljava/lang/String;)?\)Ljava/nio/file/Path;$
+re:^Landroid/content/ContentResolver;->openInputStream\(Landroid/net/Uri;\)Ljava/io/InputStream;$
+re:^Landroid/content/ContentResolver;->openOutputStream\(Landroid/net/Uri;(Ljava/lang/String;)?\)Ljava/io/OutputStream;$
+re:^Landroid/content/ContentResolver;->openAssetFileDescriptor\(Landroid/net/Uri;Ljava/lang/String;\)Landroid/content/res/AssetFileDescriptor;$
+re:^Landroid/content/ContentResolver;->openFileDescriptor\(Landroid/net/Uri;Ljava/lang/String;\)Landroid/os/ParcelFileDescriptor;$
+re:^Landroidx/core/content/FileProvider;->getUriForFile\(Landroid/content/Context;Ljava/lang/String;Ljava/io/File;\)Landroid/net/Uri;$
+# ---- 네트워크/클라우드 Sink (Data Exfiltration) ----
+re:^Lokhttp3/OkHttpClient;->newCall\(Lokhttp3/Request;\)Lokhttp3/Call;$
+re:^Lokhttp3/Call;->enqueue\(Lokhttp3/Callback;\)V$
+re:^Lokhttp3/Call;->execute\(\)Lokhttp3/Response;$
+re:^Ljava/net/HttpURLConnection;->connect\(\)V$
+re:^Ljava/net/HttpURLConnection;->getOutputStream\(\)Ljava/io/OutputStream;$
+re:^Ljava/net/HttpURLConnection;->setRequestMethod\(Ljava/lang/String;\)V$
+re:^Lorg/apache/http/client/HttpClient;->execute\(Lorg/apache/http/client/methods/HttpUriRequest;.*\).*$
+re:^Lcom/google/firebase/storage/UploadTask;->addOnSuccessListener\(.*\).*$
+re:^Lcom/google/firebase/database/DatabaseReference;->setValue\(.*\).*$
+re:^Lcom/google/firebase/firestore/DocumentReference;->set\(.*\).*$
+re:^Lcom/amazonaws/services/s3/AmazonS3Client;->putObject\(.*\).*$
+# ---- 빌더 패턴 및 커스텀 API (경로 설정/빌드) ----
+re:^L.+;->directory\(L.+;?\).+$
+re:^L.+;->setDirectory\(L.+;?\).+$
+re:^L.+;->setDiskCache\(L.+;?\).+$
+re:^L.+;->diskCache\(L.+;?\).+$
+# [수정] 사용자가 요청한 앵커($) 추가
+re:^L.+;->build\(\)L.+;$
+re:^L.+;->create\(\)L.+;$
+# [수정] 사용자가 요청한 클래스 프리픽스, 앵커 보강
+re:^L[^;]+;->writeFile\(Ljava/lang/String;Ljava/lang/String;\).*$
+re:^L[^;]+;->saveToCache\(Ljava/lang/String;.*\).*$
+re:^L[^;]+;->writeToCache\(.*\).*$
+re:^L[^;]+;->store\(Ljava/lang/String;.*\).*$
+re:^L[^;]+;->persist\(.*\).*$
+# [수정] 'diskCache'는 위에서 이미 L.+;->diskCache로 정의됨.
+# re:^L[^;]+;->diskCache\(.*\).*$
+# DataStore (구조 기반: Function0 인자를 받아 DataStore를 반환하는 모든 create)
+re:^Landroidx/datastore/[^;]+/.*;->create\(.*Lkotlin/jvm/functions/Function0;.*\)Landroidx/datastore/core/DataStore;$
+# Kotlin 최적화/Top-level Kt 유틸 경유 대비
+re:^L[^;]*/datastore/[^;]+;->create\(.*Lkotlin/jvm/functions/Function0;.*\)Landroidx/datastore/core/DataStore;$
+# Java Lambda 구현체(자주 보이는 Lambda$1/$$ExternalSyntheticLambda) 우회 매칭 보조
+re:^L[^;]+;->create\(.*Ljava/lang/Object;.*\)Landroidx/datastore/core/DataStore;$ 
+# DataStore 패턴 강화 - 기존 규칙 대체
+re:^Landroidx/datastore/.+;->create\(.*\)Landroidx/datastore/core/DataStore;$
+re:^L.+/datastore/.+;->create\(.*\)L.+/DataStore;$
+# PreferenceDataStoreFactory.create() 명시적 추가
+re:^Landroidx/datastore/preferences/PreferenceDataStoreFactory;->create\(.*\)Landroidx/datastore/core/DataStore;$
+# Kotlin delegate (by preferencesDataStore) 패턴
+re:^L.+;->preferencesDataStore\$.*$
+# DataStore Builder 패턴도 sink로 추가
+re:^Landroidx/datastore/core/DataStoreFactory;->create\(.*\)Landroidx/datastore/core/DataStore;$
+Ljava/io/File;->mkdir()Z
+Ljava/io/File;->mkdirs()Z
+re:^Lcom/bumptech/glide/GlideBuilder;->build\(Landroid/content/Context;\)Lcom/bumptech/glide/Glide;$
+re:^Lcom/bumptech/glide/load/engine/cache/InternalCacheDiskCacheFactory;-><init>\(Landroid/content/Context;.*\)V$
+re:^Lcom/bumptech/glide/load/engine/cache/DiskLruCacheFactory;-><init>\(.*\)V$
+# ===== SQLite / Room =====
+re:^Landroid/database/sqlite/SQLiteOpenHelper;->getWritableDatabase\(\)Landroid/database/sqlite/SQLiteDatabase;$
+re:^Landroidx/sqlite/db/SupportSQLiteOpenHelper;->getWritableDatabase\(\)Landroidx/sqlite/db/SupportSQLiteDatabase;$
+re:^Landroidx/room/RoomDatabase;->query\(.*\).*$
+re:^Landroid/database/sqlite/SQLiteDatabase;->openOrCreateDatabase\(Ljava/lang/String;.*\)Landroid/database/sqlite/SQLiteDatabase;$
+# ===== SharedPreferences 실제 저장 =====
+re:^Landroid/content/SharedPreferences\$Editor;->commit\(\)Z$
+re:^Landroid/content/SharedPreferences\$Editor;->apply\(\)V$
+# ===== ContentResolver write =====
+re:^Landroid/content/ContentResolver;->insert\(Landroid/net/Uri;Landroid/content/ContentValues;\)Landroid/net/Uri;$
+re:^Landroid/content/ContentResolver;->update\(Landroid/net/Uri;Landroid/content/ContentValues;Ljava/lang/String;\[Ljava/lang/String;\)I$
+re:^Landroid/content/ContentResolver;->openOutputStream\(Landroid/net/Uri;.*\)Ljava/io/OutputStream;$
+re:^Landroid/content/ContentResolver;->openFileDescriptor\(Landroid/net/Uri;Ljava/lang/String;\)Landroid/os/ParcelFileDescriptor;$
+re:^Landroid/content/ContentResolver;->openAssetFileDescriptor\(Landroid/net/Uri;Ljava/lang/String;\)Landroid/content/res/AssetFileDescriptor;$
+
+# ===== Okio / Streams / File =====
+re:^Lokio/BufferedSink;->write\(.*\).*$ 
+re:^Ljava/io/FileOutputStream;-><init>\(Ljava/lang/String;\)V$
+re:^Ljava/io/FileOutputStream;-><init>\(Ljava/io/File;\)V$
+re:^Ljava/io/RandomAccessFile;-><init>\(Ljava/lang/String;Ljava/lang/String;\)V$
+
+# ===== 네트워크 업로드 경로(서버 URL 잡기) =====
+re:^Lokhttp3/Call;->execute\(\)Lokhttp3/Response;$            # 동기 전송
+re:^Lokhttp3/OkHttpClient;->newCall\(Lokhttp3/Request;\)Lokhttp3/Call;$  # 요청 빌드
+re:^Lokhttp3/Request\$Builder;->post\(Lokhttp3/RequestBody;\)Lokhttp3/Request\$Builder;$ -> <upload>
+re:^Lokhttp3/MultipartBody\$Builder;->addFormDataPart\(.*\)Lokhttp3/MultipartBody\$Builder;$ -> <multipart>
+re:^Lretrofit2/Call;->enqueue\(Lretrofit2/Callback;\)V$       # 비동기 전송
+Ljava/io/File;-><init>\(Ljava/io/File;Ljava/lang/String;\)V
+Ljava/io/File;-><init>\(Ljava/lang/String;\)V
+
+# ---- DocumentsContract (SAF) ----
+re:^Landroid/provider/DocumentsContract;->createDocument\(Landroid/content/ContentResolver;Landroid/net/Uri;Ljava/lang/String;Ljava/lang/String;\)Landroid/net/Uri;$
+re:^Landroid/provider/DocumentsContract;->openDocument\(Landroid/content/ContentResolver;Landroid/net/Uri;Ljava/lang/String;Landroid/os/CancellationSignal;\)Landroid/os/ParcelFileDescriptor;$
+re:^Landroid/provider/DocumentsContract;->openDocument\(Landroid/content/ContentResolver;Landroid/net/Uri;Ljava/lang/String;\)Landroid/os/ParcelFileDescriptor;$
+
+
+# ---- DocumentFile (SAF wrapper) ----
+re:^Landroidx/documentfile/provider/DocumentFile;->createFile\(Ljava/lang/String;Ljava/lang/String;\)Landroidx/documentfile/provider/DocumentFile;$
+re:^Landroidx/documentfile/provider/DocumentFile;->createDirectory\(Ljava/lang/String;\)Landroidx/documentfile/provider/DocumentFile;$
+
+# ---- DownloadManager (퍼블릭 디렉터리 저장) ----
+re:^Landroid/app/DownloadManager\$Request;->setDestinationInExternalPublicDir\(Ljava/lang/String;Ljava/lang/String;\)Landroid/app/DownloadManager\$Request;$
+re:^Landroid/app/DownloadManager\$Request;->setDestinationInExternalFilesDir\(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;\)Landroid/app/DownloadManager\$Request;$
+re:^Landroid/app/DownloadManager\$Request;->setDestinationUri\(Landroid/net/Uri;\)Landroid/app/DownloadManager\$Request;$
+re:^Landroid/app/DownloadManager;->enqueue\(Landroid/app/DownloadManager\$Request;\)J$
+
+# ---- Bitmap/Exif etc. (OutputStream/FD로 실제 쓰기) ----
+re:^Landroid/graphics/Bitmap;->compress\(Landroid/graphics/Bitmap\$CompressFormat;ILjava/io/OutputStream;\)Z$
+re:^Landroidx/exifinterface/media/ExifInterface;->saveAttributes\(\)V$
+
+# ---- MediaRecorder / MediaMuxer (파일/FD 지정) ----
+re:^Landroid/media/MediaRecorder;->setOutputFile\(Ljava/lang/String;\)V$
+re:^Landroid/media/MediaRecorder;->setOutputFile\(Ljava/io/FileDescriptor;\)V$
+re:^Landroid/media/MediaMuxer;-><init>\(Ljava/lang/String;I\)V$
+
+# ---- CameraX ImageCapture (파일 지정 저장) ----
+re:^Landroidx/camera/core/ImageCapture\$OutputFileOptions\$Builder;-><init>\(Ljava/io/File;\)V$
+re:^Landroidx/camera/core/ImageCapture;->takePicture\(Landroidx/camera/core/ImageCapture\$OutputFileOptions;Ljava/util/concurrent/Executor;Landroidx/camera/core/ImageCapture\$OnImageSavedCallback;\)V$
+
+# ---- Java/Kotlin/Commons IO 헬퍼들 (파일 쓰기 유틸) ----
+re:^Lorg/apache/commons/io/FileUtils;->writeStringToFile\(Ljava/io/File;Ljava/lang/String;.*\)V$
+re:^Lorg/apache/commons/io/FileUtils;->writeByteArrayToFile\(Ljava/io/File;\[B.*\)V$
+re:^Lcom/google/common/io/Files;->asByteSink\(Ljava/io/File;.*\)Lcom/google/common/io/ByteSink;$
+re:^Lcom/google/common/io/ByteSink;->openStream\(\)Ljava/io/OutputStream;$
+re:^Lkotlin/io/FilesKt.*;->writeText\(Ljava/io/File;Ljava/lang/CharSequence;.*\)V$
+re:^Lkotlin/io/FilesKt.*;->appendText\(Ljava/io/File;Ljava/lang/CharSequence;.*\)V$
+re:^Lkotlin/io/FilesKt.*;->writeBytes\(Ljava/io/File;\[B.*\)V$
+
+# ---- 추가: 더 광범위한 파일 I/O 싱크 ----
+# mkdir/mkdirs는 디렉터리 생성 흔적
+Ljava/io/File;->mkdir()Z
+Ljava/io/File;->mkdirs()Z
+Ljava/io/File;->exists()Z
+Ljava/io/File;->isDirectory()Z
+Ljava/io/File;->isFile()Z
+Ljava/io/File;->listFiles()[Ljava/io/File;
+Ljava/io/File;->delete()Z
+Ljava/io/File;->renameTo(Ljava/io/File;)Z
+
+# ---- 파일 복사/이동 API ----
+re:^L.+;->copyFile\(Ljava/io/File;Ljava/io/File;\).*$
+re:^L.+;->copy\(Ljava/io/File;Ljava/io/File;\).*$
+re:^L.+;->moveFile\(Ljava/io/File;Ljava/io/File;\).*$
+re:^Lorg/apache/commons/io/FileUtils;->copyFile\(.*\).*$
+re:^Lorg/apache/commons/io/FileUtils;->moveFile\(.*\).*$
+
+# ---- OutputStream/Writer 범용 패턴 (파일 쓰기 흔적) ----
+re:^Ljava/io/OutputStream;->write\(.*\).*$
+re:^Ljava/io/Writer;->write\(.*\).*$
+re:^Ljava/io/BufferedWriter;->write\(.*\).*$
+re:^Ljava/io/PrintWriter;->print.*\(.*\).*$
+
+# ---- Logger/Crash Reporter (파일 쓰기 가능성) ----
+re:^L.+[Ll]og.*;->write.*\(.*\).*$
+re:^L.+[Cc]rash.*;->write.*\(.*\).*$
+re:^L.+[Rr]eport.*;->save.*\(.*\).*$
+
+# ---- 캐시/Temp 파일 관련 ----
+re:^Ljava/io/File;->createTempFile\(Ljava/lang/String;Ljava/lang/String;.*\)Ljava/io/File;$
+re:^L.+;->getTempFile\(.*\)Ljava/io/File;$
+re:^L.+;->createTemp.*\(.*\)Ljava/io/File;$
+
+# ---- WebView 관련 (캐시/쿠키 저장) ----
+re:^Landroid/webkit/WebView;->getCacheDir\(\)Ljava/io/File;$
+re:^Landroid/webkit/WebView;->setDownloadListener\(.*\).*$
+re:^Landroid/webkit/CookieManager;->flush\(\)V$
+re:^Landroid/webkit/WebViewDatabase;->.*$
+
+# ---- 다운로드/업로드 관련 ----
+re:^Landroid/app/DownloadManager;->enqueue\(.*\)J$
+re:^L.+[Dd]ownload.*;->start.*\(.*\).*$
+re:^L.+[Uu]pload.*;->start.*\(.*\).*$
+
+
+# --- AppsFlyer Sinks ---
+com.appsflyer.internal.AFb1mSDK:AFKeystoreWrapper
+com.appsflyer.internal.AFi1sSDK:AFKeystoreWrapper
+com.appsflyer.AppsFlyerLib:logEvent
+com.appsflyer.AppsFlyerLibCore:sendRequest
+
+# AppsFlyer directory/file patterns
+afrequestcache
+AF-Request-Cache
+appsflyer
+
+# --- Phenotype Sinks ---
+com.google.android.gms.phenotype.PhenotypeCommit:commitToStorage
+com.google.android.gms.phenotype.Phenotype:updateConfigurations
+phenotype_storage_info
+
+
+# ===== 광고 SDK 계열 =====
+# Unity Ads
+re:^Lcom/unity3d/ads/.*->.*$
+
+# IronSource / SupersonicAds
+re:^Lcom/ironsource/.*->.*$
+
+# TikTok / Pangle Ads (tt_ad, tt_tmpl_pkg)
+re:^Lcom/bytedance/sdk/openadsdk/.*->.*$
+
+# Meta Audience Network (adnw-file-cache)
+re:^Lcom/facebook/ads/.*->.*$
+
+# Tapjoy
+re:^Lcom/tapjoy/.*->.*$
+
+# InMobi
+re:^Lcom/inmobi/.*->.*$
+
+# Bigo Ads
+re:^Lsg/bigo/ads/.*->.*$
+
+# AdColony
+re:^Lcom/adcolony/.*->.*$
+
+# ===== 분석 / 스토리지 / 설치 SDK =====
+# Amplitude Analytics
+re:^Lcom/amplitude/api/.*->.*$
+
+# Tencent MMKV (Key-Value Storage)
+re:^Lcom/tencent/mmkv/.*->.*$
+
+# AppsFlyer (afrequestcache 등)
+re:^Lcom/appsflyer/.*->.*$
+
+# Google Phenotype
+re:^Lcom/google/android/gms/phenotype/.*->.*$
+
+# Cronet / HTTP 네트워크 캐시
+re:^Lorg/chromium/net/.*->.*$
+re:^Lcom/google/android/gms/maps/.*->.*$
+
+#=====between 추가=====
+# fyber sdk
+re:^Lcom/fyber/inneractive/sdk/player/cache/[^;]+;->[^;]*\(Ljava/io/File;J\)Lcom/fyber/inneractive/sdk/player/cache/[^;]+;$
+re:^Lcom/fyber/inneractive/sdk/player/cache/[^;]+;-><init>\(Ljava/io/File;J\)V$
+
+# bytedance sdk
+re:^Lcom/bykv/[^;]+;->[^;]*\(Ljava/io/File;J\)[^;]*$
+re:^Lcom/bykv/[^;]+;->[^;]*\(Ljava/io/File;I\)[^;]*$
+re:^Lcom/bykv/[^;]+;->[^;]*\(Ljava/io/File;\)[^;]*$
+
+# fresco
+re:^Lcom/facebook/cache/disk/DiskCacheConfig\$Builder;->build\(\)Lcom/facebook/cache/disk/DiskCacheConfig;$ <sink>
+
+# SoLoader
+re:^Lcom/facebook/soloader/[^;]*SoSource;->unpackLibrary\(Ljava/lang/String;\)Ljava/io/File;$
+
+
+
+# ===== Universal Image Loader Cache 생성 =====
+Lcom/nostra13/dcloudimageloader/cache/disc/impl/UnlimitedDiscCache;-><init>(Ljava/io/File;Lcom/nostra13/dcloudimageloader/cache/disc/naming/FileNameGenerator;)V
+Lcom/nostra13/dcloudimageloader/cache/disc/impl/TotalSizeLimitedDiscCache;-><init>(Ljava/io/File;Lcom/nostra13/dcloudimageloader/cache/disc/naming/FileNameGenerator;I)V
+Lcom/nostra13/dcloudimageloader/cache/disc/impl/FileCountLimitedDiscCache;-><init>(Ljava/io/File;Lcom/nostra13/dcloudimageloader/cache/disc/naming/FileNameGenerator;I)V
+
+# ===== MultiDex 디렉터리 생성 =====
+Landroidx/multidex/MultiDex;->mkdirChecked(Ljava/io/File;)V
+
+# ===== DHFile (DCloud 프레임워크) =====
+Lio/dcloud/common/DHInterface/DHFile;->createNewFile(Ljava/lang/String;)V
+Lio/dcloud/common/DHInterface/DHFile;->createNewFile(Ljava/io/File;)V
+
+# =====  Sink 등록 (Source 없이도 기록) =====
+# MultiDex - code_cache
+Landroidx/multidex/MultiDex;->getDexDir(Landroid/content/Context;Ljava/io/File;Ljava/lang/String;)Ljava/io/File;
+Landroidx/multidex/MultiDex;->install(Landroid/content/Context;)V
+Landroidx/multidex/MultiDex;->clearOldDexDir(Landroid/content/Context;)V
+
+# BaseInfo - cnc3eje6
+Lio/dcloud/common/util/BaseInfo;->updateBaseInfo(Z)V
+Landroid/content/Context;->getDir(Ljava/lang/String;I)Ljava/io/File;
+
+### 복숭아 친구, 손잡기, 드림 데이트, 스파크 데이트
+## app_crash
+Lcom/taobao/weex/WXEnvironment;->getCrashFilePath(Landroid/content/Context;)Ljava/lang/String;
+# StorageUtils - uil-images
+Lcom/nostra13/dcloudimageloader/utils/StorageUtils;->getIndividualCacheDirectory(Landroid/content/Context;)Ljava/io/File;
+# code_cache
+Landroidx/core/content/ContextCompat;->getCodeCacheDir(Landroid/content/Context;)Ljava/io/File;
+Landroid/content/Context;->getCodeCacheDir()Ljava/io/File;
+
+
+
