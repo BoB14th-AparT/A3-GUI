@@ -1,0 +1,14 @@
+# Android App Package List
+# One package name per line
+# Lines starting with # are comments
+
+com.facebook.lite
+com.facebook.katana
+com.instagram.android
+com.whatsapp
+com.twitter.android
+com.snapchat.android
+com.google.android.youtube
+com.spotify.music
+com.tiktok
+com.netflix.mediaclient

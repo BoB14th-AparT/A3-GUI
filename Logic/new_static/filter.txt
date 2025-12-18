@@ -1,0 +1,1719 @@
+# === 무시할 sink 정규식 패턴 목록 ===
+# 한 줄에 하나씩, # 로 시작하면 주석
+
+# 단순 Log.e(TAG, msg) 같은 안드로이드 로그
+^Landroid/util/Log;->.*\(Ljava/lang/String;Ljava/lang/String;\)I$
+
+# Logger/Crash/Report 유틸 (클래스 이름에 Log / Crash / Report 포함, 첫 인자가 String)
+^L[^;]*[Ll]og[^;]*;->write.*\(Ljava/lang/String;.*\).*$ 
+^L[^;]*[Ll]og[^;]*;->log.*\(Ljava/lang/String;.*\).*$
+^L[^;]*[Cc]rash[^;]*;->write.*\(Ljava/lang/String;.*\).*$ 
+^L[^;]*[Rr]eport[^;]*;->save.*\(Ljava/lang/String;.*\).*$
+
+# MediaBrowserCompat 상태 dump / 체크류 (connect..., disconnect..., onServiceConnected 등)
+^Landroid/support/v4/media/MediaBrowserCompat\$MediaBrowserImplBase;->dump\(\)V$
+^Landroid/support/v4/media/MediaBrowserCompat\$MediaBrowserImplBase\$MediaServiceConnection;->isCurrent\(Ljava/lang/String;\)Z$
+
+# CameraX / Browser / Future 완료 콜백
+^Landroidx/concurrent/futures/CallbackToFutureAdapter\$Completer;->set\(Ljava/lang/Object;\)Z$
+
+# SpongyCastle Hex.decode
+^Lorg/spongycastle/util/encoders/Hex;->decode\(\[B\)\[B$
+
+# Agora / Camera2 카메라 특성 읽기
+^Lio/agora/rtc2/video/VideoCaptureCamera2;->getCameraCharacteristics\(I\)Landroid/hardware/camera2/CameraCharacteristics;$
+
+# Google Mobile Ads 내부 GL 디버그 로그 (OpenGL 함수명 문자열만 찍는 sink)
+^Lcom/google/android/gms/internal/ads/zzcbq;->zzh\(Ljava/lang/String;\)V$
+
+# StaticLayout 빌더 (순수 레이아웃 용; 파일 I/O 아님)
+^Landroid/text/StaticLayout\$Builder;->build\(\)Landroid/text/StaticLayout;$
+
+# ConstraintLayout 디버그 scene string (레이아웃 상태 덤프)
+^Lq/f;->O\(Ljava/lang/StringBuilder;\)V$
+
+# ConstraintLayout Barrier 경고 (NO CONSTRAINTS 경고 문자열 생성용)
+^Landroidx/constraintlayout/widget/Barrier;-><init>\(Landroid/content/Context;\)V$
+
+^Lcom/google/android/gms/internal/ads/zzgax;->zzs\(Lcom/google/common/util/concurrent/ListenableFuture;\)Z$
+# Google Ads - 문자열 디버그 로그류
+^Lcom/google/android/gms/internal/ads/[^;]+;->zz\w*\(Ljava/lang/String;\)V$
+
+# Google Ads - ListenableFuture 상태 관리류
+^Lcom/google/android/gms/internal/ads/[^;]+;->zz\w*\(Lcom/google/common/util/concurrent/ListenableFuture;[^\)]*\)Z$
+
+# --- HTTP 메서드/헤더 이름이 그대로 cache 키로 쓰인 디버그 아티팩트 ---
+^/data/user/0/.+/cache/(GET|POST|HEAD|PUT|DELETE|OPTIONS|TRACE)$
+^/data/user/0/.+/cache/(Content-Length|Content-Type|Cookie|If-Modified-Since|User-Agent|UTF-8)$
+
+# OpenGL 함수 이름이 그대로 파일/캐시 key 로 쓰인 경우
+^/data/user/0/[^/]+/(cache|files)/(getProgramiv|deleteProgram|validateProgram|useProgram|vertexAttribPointer|enableVertexAttribArray|genTextures|bindTextures|texParameteri|drawArrays|viewport)$
+
+# 공통으로 쓰이는 디버그/에러 문구들 (마지막 세그먼트가 이 문장일 때)
+^/data/user/0/[^/]+/(cache|files)/Skipping finishClose due to being state RELEASED\.$
+^/data/user/0/[^/]+/(cache|files)/Surface no longer in use$
+^/data/user/0/[^/]+/(cache|files)/No open sessions to be closed\.$
+^/data/user/0/[^/]+/(cache|files)/The callback can only complete once\.$
+^/data/user/0/[^/]+/(cache|files)/Tried to set value from future which is not done$
+^/data/user/0/[^/]+/(cache|files)/without a cause$
+^/data/user/0/[^/]+/(cache|files)/WARNING NO CONSTRAINTS for view$
+
+
+# --- HTTP 메서드/헤더 이름이 그대로 cache 키로 쓰인 디버그 아티팩트 ---
+^/data/user/0/.+/cache/(GET|POST|HEAD|PUT|DELETE|OPTIONS|TRACE)$
+^/data/user/0/.+/cache/(Content-Length|Content-Type|Cookie|If-Modified-Since|User-Agent|UTF-8)$
+
+# okhttp 체인 문자열이 그대로 cache key 로 들어간 경우
+^/data/user/0/[^/]+/cache/chain$
+
+# boolean 상수가 그대로 파일/캐시 key 로 쓰인 경우
+^/data/user/0/[^/]+/(cache|files)/BOOLEAN_TRUE$
+
+# 이미지 캐시 라이브러리의 통계 문자열 (실제 파일 아님)
+^/data/user/0/[^/]+/cache/Bitmap Stats$
+
+# volley cache 상태 문자열이 그대로 path 에 들어간 경우
+^/data/user/0/[^/]+/cache/cache-(discard-canceled|hit-expired|hit-refresh-needed|miss|parsing-failed|queue-take)$
+
+# Crashlytics 상태 메시지가 파일 path 로 잘못 잡힌 경우
+^/data/user/0/[^/]+/(cache|files)/No open sessions to be closed\.$
+
+# Jackson UTF8JsonGenerator 내부 메시지류
+^/data/user/0/[^/]+/files/write (binary value|boolean value|null value|number|text value)$
+
+^/data/user/0/[^/]+/files/(yyMMddHHmmssz|yyyyMMddHHmmss)$
+
+# Kotlin lateinit 프로퍼티 예외 – 항상 단순 필드명 문자열만 들어옴
+^Lkotlin/jvm/internal/Intrinsics;->throwUninitializedPropertyAccessException\(Ljava/lang/String;\)V$
+
+# 마지막 세그먼트에 공백이 3개 이상 들어가는 '문장형' 이름은 노이즈로 간주
+^/data/user/0/[^/]+/(cache|files)/([^/]*\s[^/]*\s[^/]*\s[^/]*)$
+
+# NLog / ClickLog / NClick 류 – 통계/클릭 로그용 sink
+^Lcom/[^;]*NLog[^;]*;->.*\(Ljava/lang/String;.*\).*$        # NLog 계열
+^Lcom/[^;]*ClickLog[^;]*;->.*\(Ljava/lang/String;.*\).*$    # ClickLogSender, sendClickLog 등
+^Lcom/[^;]*NClicks?[^;]*;->.*\(Ljava/lang/String;.*\).*$    # NClicksKt, sendNClick 등
+^Lcom/[^;]*ClickSender[^;]*;->.*\(Ljava/lang/String;.*\).*$ # 기타 Click 로그 전송 유틸
+
+# 마지막 세그먼트가 "여러 단어로 된 문장" 스타일인 경우
+^/data/user/0/[^/]+/(cache|files)/[^/]*[ ]+[^/]*[ ]+[^/]*$
+# 마지막 세그먼트가 "식별자.식별자..." 형태 (코드/상수 이름)
+^/data/user/0/[^/]+/(cache|files)/[A-Za-z0-9_$]+(\.[A-Za-z0-9_$]+)+$
+# 클릭/스크린뷰 로그 전용 sink (패턴 기반)
+^L[^;]*\(.*Click.*\)[^;]*;->.*\(Ljava/lang/String;.*\)V$
+^L[^;]*Analytics[^;]*;->.*\(Ljava/lang/String;.*\).*$
+^L[^;]*Tracker[^;]*;->.*\(Ljava/lang/String;.*\).*$
+
+# --- Context/Application Getter 메서드들 ---
+# 패키지명, 클래스명, Context 등을 반환 (파일 경로 아님)
+;->getApplicationContext\(\)Landroid/content/Context;$
+;->getPackageName\(\)Ljava/lang/String;$
+;->getApplication\(\)Landroid/app/Application;$
+
+# --- 상태 확인 메서드들 (boolean 반환, 상수명/설정값만 전달) ---
+# 로그인, 다크모드 등 상태 확인 (TP 손실 위험이 낮은 것만)
+;->isLoggedIn\(\)Z$
+;->isDarkMode\(\)Z$
+;->isEnabled\(\)Z$
+;->isScreenReaderEnabled\(\)Z$
+;->isRoot\(\)Lorg/hamcrest/Matcher;$
+;->isDisplayed\(\)Lorg/hamcrest/Matcher;$
+
+# --- OpenGL/Media 유틸리티 메서드들 ---
+# 에러 체크, 리소스 해제 등 (에러 메시지/상태값만 전달)
+^Landroidx/media3/common/util/GlUtil;->checkGlError\(\)V$
+;->release\(\)V$
+
+# --- LiveData/상태 관리 메서드들 ---
+# setValue, call 등은 변수명/상태값만 전달
+^Landroidx/lifecycle/MutableLiveData;->setValue\(Ljava/lang/Object;\)V$
+^Landroidx/lifecycle/LiveData;->setValue\(Ljava/lang/Object;\)V$
+;->call\(\)V$
+
+# --- 에러 핸들러 ---
+# 에러 메시지 getter (에러 문구만 반환)
+# COMMENTED OUT: Causes TP loss in NaverCafe (/cache directory)
+# The method EditorViewModel;->onErrorGetCacheContents calls CafeApiExceptionHandler;->getErrorMessage()
+# and the taint flow legitimately connects /cache directory to this method
+# ;->getErrorMessage\(\)Ljava/lang/String;$
+;->getUserAgent\(\)Ljava/lang/String;$
+
+# --- ASN1/암호화 관련 유틸리티 ---
+# readObject는 객체 읽기만 수행 (상수명만 전달됨)
+^Lorg/spongycastle/asn1/ASN1InputStream;->readObject\(\)Lorg/spongycastle/asn1/ASN1Primitive;$
+
+# --- Kotlin 리플렉션 ---
+# ClassId topLevel은 클래스명만 다룸
+^Lkotlin/reflect/jvm/internal/impl/name/ClassId;->topLevel\(Lkotlin/reflect/jvm/internal/impl/name/FqName;\)Lkotlin/reflect/jvm/internal/impl/name/ClassId;$
+
+# --- RxJava 에러 핸들링 ---
+# 에러 객체 전달 (에러 메시지만 포함)
+^Lio/reactivex/plugins/RxJavaPlugins;->onError\(Ljava/lang/Throwable;\)V$
+
+# --- DataStore preferences ---
+# 설정 키명만 전달
+^Landroidx/datastore/preferences/PreferenceDataStoreDelegateKt;->preferencesDataStore\$default\(
+
+# --- File 존재 확인 메서드 (생성 아님) ---
+# 근본 원인: exists(), delete(), listFiles()는 파일을 생성하지 않고 확인만 수행
+# 인자로 전달되는 문자열은 변수명, 상수명, SQLite suffix 등이며 실제 파일 경로가 아님
+# 모든 APK에 범용 적용 가능 (파일 시스템 메서드의 근본적 특성)
+# 주의: exists(), delete(), listFiles()는 TP 손실 위험이 있어 주석 처리
+# ^Ljava/io/File;->exists\(\)Z$
+# ^Ljava/io/File;->delete\(\)Z$
+# ^Ljava/io/File;->listFiles\(\)\[Ljava/io/File;$
+^Ljava/io/File;->isDirectory\(\)Z$
+^Ljava/io/File;->isFile\(\)Z$
+^Ljava/io/File;->canRead\(\)Z$
+^Ljava/io/File;->canWrite\(\)Z$
+
+# --- Future/Callback 비동기 작업 ---
+# 근본 원인: 비동기 작업의 완료/실패 처리 시 에러 메시지를 태그로 사용
+# 파일 경로가 아닌 상태 메시지/에러 메시지만 전달됨
+^Landroidx/concurrent/futures/CallbackToFutureAdapter;->getFuture\(Landroidx/concurrent/futures/CallbackToFutureAdapter\$Resolver;\)Lcom/google/common/util/concurrent/ListenableFuture;$
+^Landroidx/concurrent/futures/CallbackToFutureAdapter\$Completer;->setException\(Ljava/lang/Throwable;\)Z$
+^Landroidx/browser/trusted/FutureUtils;->immediateFailedFuture\(Ljava/lang/Throwable;\)Lcom/google/common/util/concurrent/ListenableFuture;$
+^Landroidx/camera/camera2/internal/FocusMeteringControl;->cancelFocusAndMetering\(\)Lcom/google/common/util/concurrent/ListenableFuture;$
+
+# --- Surface/Camera 상태 관리 ---
+# 근본 원인: UI Surface/카메라 상태 추적용 메서드, 에러 메시지를 상태 식별자로 사용
+# 파일 I/O가 아닌 UI/카메라 리소스 관리
+^Landroidx/camera/core/impl/DeferrableSurfaces;->incrementAll\(Ljava/util/List;\)V$
+^Landroidx/camera/core/impl/DeferrableSurfaces;->decrementAll\(Ljava/util/List;\)V$
+^Landroidx/camera/video/Recorder;->setInProgressTransformationInfo\(Landroidx/camera/core/SurfaceRequest\$TransformationInfo;\)V$
+^Lcom/navercorp/vtech/media/codec/decoder/SurfaceHwDecoder;->receiveFrame\(\)Lcom/navercorp/vtech/media/codec/Frame;$
+
+# --- getInstance() Singleton/Static 패턴 ---
+# 근본 원인: Singleton getter는 변수명/필드명을 반환하며 파일 경로 아님
+# Firebase, Crashlytics, DB Helper 등 모든 getInstance() 메서드에 적용
+# 주의: Firebase getInstance()는 TP 손실 위험이 있어 주석 처리
+# ^Lcom/google/firebase/crashlytics/FirebaseCrashlytics;->getInstance\(\)Lcom/google/firebase/crashlytics/FirebaseCrashlytics;$
+# ^Lcom/google/firebase/FirebaseApp;->getInstance\(\)Lcom/google/firebase/FirebaseApp;$
+# ^Lcom/google/firebase/crashlytics/ktx/FirebaseCrashlyticsKt;->getCrashlytics\(Lcom/google/firebase/ktx/Firebase;\)Lcom/google/firebase/crashlytics/FirebaseCrashlytics;$
+
+# --- OpenGL/Media Utility 메서드 ---
+# 근본 원인: OpenGL 텍스처 생성, 버전 확인 등은 GPU 리소스 작업이며 파일 I/O 아님
+# 에러 메시지/상태 문자열만 전달
+^Landroidx/media3/common/util/GlUtil;->createExternalTexture\(\)I$
+^Landroidx/camera/core/processing/util/GLUtils;->generateTexture\(\)I$
+^Landroidx/camera/core/processing/util/GLUtils;->generateFbo\(\)I$
+^Landroidx/camera/core/processing/util/GLUtils;->getGlVersionNumber\(\)Ljava/lang/String;$
+
+# --- Thread/Looper Utility ---
+# 근본 원인: 스레드 체크, Looper 가져오기 등은 스레드 관리이며 파일 I/O 아님
+# 에러 메시지/권한 문자열만 전달
+^Lorg/chromium/base/ThreadUtils\$ThreadChecker;->assertOnValidThread\(\)V$
+^Lorg/chromium/base/ThreadUtils;->getUiThreadLooper\(\)Landroid/os/Looper;$
+
+# --- 암호화/보안 Utility ---
+# 근본 원인: 키 생성, JNI 네이티브 호출 등은 암호화 작업이며 파일 I/O 아님
+# 에러 메시지/권한 문자열만 전달
+^Lorg/chromium/net/X509UtilJni;->get\(\)Lorg/chromium/net/X509Util\$Natives;$
+^Lorg/spongycastle/jcajce/provider/asymmetric/util/ECUtil;->generatePrivateKeyParameter\(Ljava/security/PrivateKey;\)Lorg/spongycastle/crypto/params/AsymmetricKeyParameter;$
+^Lorg/chromium/net/HttpNegotiateAuthenticatorJni;->get\(\)Lorg/chromium/net/HttpNegotiateAuthenticator\$Natives;$
+
+# --- Compose UI 상태 관리 ---
+# 근본 원인: Jetpack Compose UI 상태 관리, 파일 I/O 아님
+# Compose 이벤트 디스패처는 UI 상태 문자열만 전달
+^Landroidx/compose/runtime/CompositionImpl\$RememberEventDispatcher;->dispatchRememberObservers\(\)V$
+^Landroidx/compose/ui/platform/DecodeHelper;->decodeSpanStyle\(\)Landroidx/compose/ui/text/SpanStyle;$
+
+# --- WebView API/상태 관리 ---
+# 근본 원인: WebView 권한/상태 확인, 파일 I/O 아님
+# WebView API 호출 로그 문자열만 전달
+^Lcom/android/webview/chromium/GeolocationPermissionsAdapter;->e\(\)Z$
+^Lorg/chromium/base/BuildInfo;->getInstance\(\)Lorg/chromium/base/BuildInfo;$
+
+# --- Facebook SDK 상태/로그 ---
+# 근본 원인: Facebook SDK 이벤트 로깅, 설정 관리
+# 이벤트 필드명, 설정값만 전달 (파일 경로 아님)
+^Lcom/facebook/internal/Utility;->getDataProcessingOptions\(\)Lorg/json/JSONObject;$
+^Lcom/facebook/FacebookSdk;->getAutoLogAppEventsEnabled\(\)Z$
+^Lcom/facebook/appevents/AppEventDiskStore;->readAndClearStore\(\)Lcom/facebook/appevents/PersistedEvents;$
+
+# --- JSON/Buffer 파싱 Utility ---
+# 근본 원인: JSON/Buffer 파싱 에러 메시지 생성
+# 파일 I/O가 아닌 메모리 파싱 작업
+^Lcom/squareup/moshi/JsonUtf8Reader;->C\(\)V$
+^Lokio/Buffer;->readByteString\(\)Lokio/ByteString;$
+
+# --- Naver 앱 특화 Utility (범용 패턴으로 일반화 가능) ---
+# 근본 원인: 앱 특화 로그, 상태 관리 메서드
+# 필드명/변수명만 전달 (다른 앱도 유사 패턴 존재)
+# 주의: isOffline()는 TP 손실 위험이 있어 주석 처리
+# ;->isOffline\(\)Z$
+;->getCookie\(\)Ljava/lang/String;$
+
+# --- Coroutine Continuation ---
+# 근본 원인: Kotlin Coroutine의 Continuation은 에러 메시지를 전달
+# 파일 경로가 아닌 코루틴 상태 메시지
+^Lkotlinx/coroutines/CancellableContinuationImpl;->getResult\(\)Ljava/lang/Object;$
+
+# --- Fragment 상태 관리 ---
+# 근본 원인: Fragment lifecycle 관리, UI 상태 메시지만 전달
+^Landroidx/fragment/app/FragmentManager;->scheduleCommit\(\)V$
+
+# --- Camera 세션/설정 관리 ---
+# 근본 원인: 카메라 세션 설정, 상태 메시지만 전달 (파일 I/O 아님)
+^Landroidx/camera/camera2/internal/MeteringRepeatingSession;->createSessionConfig\(\)Landroidx/camera/core/impl/SessionConfig;$
+
+# --- ID/필드명 생성 Utility ---
+# 근본 원인: ID 생성, 필드명 반환 등은 변수명만 다루며 파일 경로 아님
+;->generateId\(\)Ljava/lang/String;$
+;->getUserFirstMessageNo\(.*\)J$
+;->getStatusBarHeight\(\)I$
+
+# --- Deprecated 클래스 getter ---
+# 근본 원인: deprecated 클래스의 Context getter는 필드명만 반환
+^Ldeprecate/deprecate;->getContext\(\)Landroid/content/Context;$
+
+# --- FragmentManager 상태 관리 ---
+# 근본 원인: Fragment lifecycle/상태 저장, 에러 메시지/필드명만 전달
+^Landroidx/fragment/app/FragmentManager;->startPendingDeferredFragments\(\)V$
+^Landroidx/fragment/app/FragmentManager;->saveAllStateInternal\(\)Landroid/os/Bundle;$
+
+# --- Chromium System Utility ---
+# 근본 원인: 시스템 상태 확인, 스레드 체크 등 시스템 유틸리티
+# 에러 메시지/설정값만 전달, 파일 I/O 아님
+^Lorg/chromium/base/SysUtils;->amountOfPhysicalMemoryKB\(\)I$
+^Lorg/chromium/base/ThreadUtils;->runningOnUiThread\(\)Z$
+^Lorg/chromium/net/X509Util;->a\(\)V$
+^Lorg/chromium/net/X509Util;->reloadTestTrustManager\(\)V$
+^Lorg/chromium/net/X509Util;->verifyKeyUsage\(Ljava/security/cert/X509Certificate;\)Z$
+^Lorg/chromium/net/NetworkChangeNotifierAutoDetect;->updateCurrentNetworkState\(\)V$
+
+# --- Locale/Parsing Utility ---
+# 근본 원인: 로케일 파싱, 에러 메시지 생성, 파일 I/O 아님
+^Lorg/apache/commons/lang3/LocaleUtils;->parseLocale\(Ljava/lang/String;\)Ljava/util/Locale;$
+
+# --- Kotlin Reflection/Type Checking ---
+# 근본 원인: 타입 체킹, 리플렉션 작업, 필드명만 전달
+^Lkotlin/reflect/jvm/internal/impl/types/checker/UtilsKt;->approximate\(Lkotlin/reflect/jvm/internal/impl/types/KotlinType;\)Lkotlin/reflect/jvm/internal/impl/types/KotlinType;$
+
+# --- Chromium Variations/Share Utility ---
+# 근본 원인: 유틸리티 클래스, 필드명/클래스명만 전달
+^Lorg/chromium/xwhale/common/variations/VariationsUtils;->closeSafely\(Ljava/io/Closeable;\)V$
+
+# --- SpongyCastle ASN1/암호화 에러 메시지 ---
+# 근본 원인: ASN1 파싱, 암호화 검증 시 에러 메시지만 생성
+^Lorg/spongycastle/asn1/x500/style/IETFUtils;->unescape\(Ljava/lang/String;\)Ljava/lang/String;$
+^Lorg/spongycastle/jcajce/provider/symmetric/GcmSpecUtil;->extractGcmSpec\(Lorg/spongycastle/asn1/ASN1Primitive;\)Ljava/security/spec/AlgorithmParameterSpec;$
+^Lorg/spongycastle/asn1/DefiniteLengthInputStream;->toByteArray\(\)\[B$
+^Lorg/spongycastle/asn1/DERExternalParser;->getLoadedObject\(\)Lorg/spongycastle/asn1/ASN1Primitive;$
+^Lorg/spongycastle/asn1/x9/X9ECParameters;->getInstance\(Ljava/lang/Object;\)Lorg/spongycastle/asn1/x9/X9ECParameters;$
+^Lorg/spongycastle/jcajce/provider/keystore/bc/BcKeyStoreSpi;->loadStore\(Ljava/io/InputStream;\)V$
+
+# --- XML Parser 에러 메시지 ---
+# 근본 원인: XML 파싱 에러 메시지 생성
+^Lorg/xmlpull/mxp1/MXParser;->getPositionDescription\(\)Ljava/lang/String;$
+
+# --- AndroidX Test Utility ---
+# 근본 원인: 테스트 유틸리티, /proc 읽기 (실제 앱 artifact 아님)
+^Landroidx/test/internal/util/ProcSummary;->readToString\(Ljava/io/File;\)Ljava/lang/String;$
+
+# --- Media3 Extractor 에러 메시지 ---
+# 근본 원인: 미디어 파싱 에러 메시지
+^Landroidx/media3/extractor/VorbisUtil;->readFloors\(Landroidx/media3/extractor/VorbisBitArray;\)V$
+
+# --- Chromium NFC/Device Utility ---
+# 근본 원인: 디바이스 기능 유틸리티, 클래스명만 전달
+^Lorg/chromium/device/nfc/NdefMessageUtils;->toNdefMessage\(Landroid/nfc/NdefMessage;\)Lorg/chromium/device/mojom/NdefMessage;$
+
+# --- Adobe XMP 에러 메시지 ---
+# 근본 원인: XMP 메타데이터 파싱 에러
+^Lcom/adobe/internal/xmp/impl/XMPNode;->addChild\(Lcom/adobe/internal/xmp/impl/XMPNode;\)V$
+
+# --- Compose UI 에러 메시지 ---
+# 근본 원인: Compose UI 렌더링 에러
+^Landroidx/compose/ui/text/android/style/PlaceholderSpan;->getFontMetrics\(\)Landroid/graphics/Paint\$FontMetricsInt;$
+
+# --- 앱 특화 init/load 메서드 (필드명만 전달) ---
+# 근본 원인: ViewModel/Service 초기화, 필드명만 전달
+;->init\(\)V$
+;->load\(\)V$
+;->getArticleContents\(Ljava/lang/String;\)Ljava/lang/String;$
+
+# --- Facebook SDK 설정/유틸리티 ---
+# 근본 원인: Facebook SDK의 설정 getter, URL 반환, 유틸리티 메서드
+# 모두 설정값/URL/필드명만 반환하며 파일 I/O 아님
+^Lcom/facebook/UserSettingsManager;->getAdvertiserIDCollectionEnabled\(\)Z$
+^Lcom/facebook/appevents/ondeviceprocessing/OnDeviceProcessingManager;->isOnDeviceProcessingEnabled\(\)Z$
+^Lcom/facebook/internal/Utility;->isAutoAppLinkSetup\(\)Z$
+^Lcom/facebook/internal/Utility;->getCurrentLocale\(\)Ljava/util/Locale;$
+^Lcom/facebook/internal/FetchedAppSettingsManager;->loadAppSettingsAsync\(\)V$
+^Lcom/facebook/internal/CustomTabUtils;->getChromePackage\(\)Ljava/lang/String;$
+^Lcom/facebook/internal/ServerProtocol;->getGraphUrlBase\(\)Ljava/lang/String;$
+^Lcom/facebook/appevents/internal/AppEventUtility;->getAppVersion\(\)Ljava/lang/String;$
+^Lcom/facebook/appevents/iap/InAppPurchaseLoggerManager;->eligibleQueryPurchaseHistory\(\)Z$
+^Lcom/facebook/appevents/iap/InAppPurchaseManager;->startTracking\(\)V$
+^Lcom/facebook/appevents/cloudbridge/AppEventsCAPIManager;->getSavedCloudBridgeCredentials\$facebook_core_release\(\)Ljava/util/Map;$
+^Lcom/facebook/GraphRequest;->executeAndWait\(\)Lcom/facebook/GraphResponse;$
+^Lcom/facebook/soloader/SysUtil;->dumbDelete\(Ljava/io/File;\)V$
+
+# --- RecyclerView/AndroidX UI 에러 메시지 ---
+# 근본 원인: RecyclerView 레이아웃 에러 메시지, 파일 I/O 아님
+^Landroidx/recyclerview/widget/LinearLayoutManager;->assertNotInLayoutOrScroll\(Ljava/lang/String;\)V$
+^Landroidx/recyclerview/widget/LinearLayoutManager;->logChildren\(\)V$
+^Landroidx/recyclerview/widget/ItemTouchHelper\$RecoverAnimation;->start\(\)V$
+
+# --- Lottie JSON Parser ---
+# 근본 원인: JSON 파싱, 키명만 전달
+^Lcom/airbnb/lottie/parser/moshi/JsonReader\$Options;->of\(\[Ljava/lang/String;\)Lcom/airbnb/lottie/parser/moshi/JsonReader\$Options;$
+
+# --- Adobe XMP Utility ---
+# 근본 원인: XMP 메타데이터 처리, 필드명만 전달
+^Lcom/adobe/internal/xmp/XMPUtils;->convertFromDate\(Lcom/adobe/internal/xmp/XMPDateTime;\)Ljava/lang/String;$
+
+# --- Google Crypto Tink ---
+# 근본 원인: 암호화 키 관리, 에러 메시지만 전달
+^Lcom/google/crypto/tink/KeysetManager;->setPrimary\(I\)Lcom/google/crypto/tink/KeysetManager;$
+
+# --- Chromium XWhale Utility ---
+# 근본 원인: WebView 로깅 설정, 필드명만 전달
+^Lorg/chromium/xwhale/XWhaleCrashyClassUtils;->maybeCrashIfEnabled\(\)V$
+
+# --- OkHttp Platform Utility ---
+# 근본 원인: SSL/TLS 플랫폼 유틸리티, 필드명만 전달
+^Lokhttp3/internal/platform/Platform;->platformTrustManager\(\)Ljavax/net/ssl/X509TrustManager;$
+
+# --- Naver Ads SDK ---
+# 근본 원인: Ads SDK 내부 유틸리티, 필드명/에러 메시지만 전달
+^Lcom/naver/ads/internal/t;->a\(\)Ljava/io/File;$
+^Lcom/naver/ads/internal/video/sm;->a\(\)V$
+
+# --- RxJava Observable ---
+# 근본 원인: RxJava Observable 연산, 에러 메시지만 전달
+^Lio/reactivex/Observable;->firstElement\(\)Lio/reactivex/Maybe;$
+
+# --- Naver SmartEditor ---
+# 근본 원인: SmartEditor 응답 처리, 필드명만 전달
+^Lcom/navercorp/android/smarteditor/network/model/PhotoUploadResponse;->getResultOrThrow\(\)Lcom/navercorp/android/smarteditor/network/model/PhotoUploadResult;$
+
+# --- DB/Chat getInstance() Singleton ---
+# 근본 원인: DB/Chat Helper의 getInstance()는 변수명/테이블명을 반환
+# 예: tag_order, media_content, update_time, chatMessageHandlerWeakReference
+^Lcom/nhn/android/navercafe/core/db/CafeDBHelper;->getInstance\(\)Lcom/nhn/android/navercafe/core/db/CafeDBHelper;$
+^Lcom/naver/chatting/library/support/db/ChatMessageDBManager\$Companion;->getInstance\(\)Lcom/naver/chatting/library/support/db/ChatMessageDBManager;$
+
+# --- LoginPreferenceManager Getter ---
+# 근본 원인: 로그인 설정 getter는 필드명/설정값만 반환 (파일 I/O 아님)
+# 예: NaverLoginPreferenceData, oldPreferenceManager.accountInfo
+^Lcom/navercorp/nid/preference/LoginPreferenceManager;->getAccountInfo\(\)Lcom/navercorp/nid/login/api/model/LoginResult\$AccountInfo;$
+^Lcom/navercorp/nid/preference/LoginPreferenceManager;->getLoginResultInfo\(\)Lcom/navercorp/nid/login/api/model/LoginResultInfo;$
+^Lcom/navercorp/nid/preference/LoginPreferenceManager;->getOTN\(\)Lcom/navercorp/nid/login/otn/OneTimeLoginNumber;$
+
+# --- 에러 핸들러/리포트 메서드 ---
+# 근본 원인: 에러 리포팅 시 에러 메시지만 전달 (파일 경로 아님)
+# 예: "Err writeTextToFile : invalid filePath", "d is null", "s is null"
+^Lcom/naver/logrider/android/core/LibraryExceptionManager;->notify\(Ljava/lang/Throwable;\)V$
+^Lio/reactivex/internal/disposables/DisposableHelper;->reportDisposableSet\(\)V$
+^Lio/reactivex/internal/subscriptions/SubscriptionHelper;->reportSubscriptionSet\(\)V$
+
+# --- UI Fragment/ViewModel getter ---
+# 근본 원인: UI 컴포넌트 getter는 필드명만 반환 (파일 I/O 아님)
+# 예: swipeRefreshLayout, parentFragmentManager, accountRecoveryAddNewEmailParamsKey
+^Landroidx/fragment/app/Fragment;->getChildFragmentManager\(\)Landroidx/fragment/app/FragmentManager;$
+^Landroidx/fragment/app/Fragment;->requireContext\(\)Landroid/content/Context;$
+^Landroidx/fragment/app/Fragment;->requireActivity\(\)Landroidx/fragment/app/FragmentActivity;$
+^Landroidx/fragment/app/Fragment;->getViewLifecycleOwner\(\)LX/0Qo;$
+^Landroidx/fragment/app/Fragment;->getString\(I\)Ljava/lang/String;$
+^Landroidx/fragment/app/Fragment;->requireParentFragment\(\)Landroidx/fragment/app/Fragment;$
+^Lcom/navercorp/cineditor/presentation/CineditorViewModel;->getConfiguration\(\)Lcom/navercorp/cineditor/common/config/ConfigurationData;$
+
+# --- Camera 관련 Utility ---
+# 근본 원인: Camera crop, EXIF 파싱, 인코더 리셋, 플래시 설정 등 UI/미디어 작업
+# 파일 I/O가 아닌 메모리/UI 작업, 에러 메시지/클래스명만 전달
+# 예: takePictureInternal, ExifAttribute, VideoEncoder
+^Landroidx/camera/core/ImageCapture;->getTakePictureCropRect\(\)Landroid/graphics/Rect;$
+^Landroidx/camera/core/impl/utils/ByteOrderedDataInputStream;->readDouble\(\)D$
+^Landroidx/camera/video/internal/encoder/EncoderImpl;->reset\(\)V$
+^Landroidx/camera/view/CameraController;->updateScreenFlashToImageCapture\(\)V$
+
+# --- Naver BA 로그 전송 ---
+# 근본 원인: BA 로그 전송 시 이벤트명만 전달 (파일 경로 아님)
+# 예: member_block_max_alert, top, go_to_home
+^Lcom/naver/logrider/android/ba/BALog;->send\(\)V$
+
+# --- RxJava Dispose ---
+# 근본 원인: RxJava Disposable 해제 시 에러 메시지만 전달
+# 예: "One of the sources is null", "The iterator returned a null CompletableSource"
+^Lio/reactivex/disposables/CompositeDisposable;->dispose\(\)V$
+
+# --- Coroutine Job getter ---
+# 근본 원인: Coroutine Job 상태 확인, 에러 메시지만 전달
+# 예: "called outside of runRecomposeAndApplyChanges"
+^Lkotlinx/coroutines/JobKt;->getJob\(Lkotlin/coroutines/CoroutineContext;\)Lkotlinx/coroutines/Job;$
+
+# --- Naver Nelo/Chat Cache getter ---
+# 근본 원인: 캐시/설정 getter는 필드명만 반환
+# 예: userNo
+^Lcom/naver/chatting/library/engine/ChatRepository\$NewMessageCountManager;->getUnreadCountCache\(I\)I$
+
+# --- Android LocalBroadcastManager ---
+# 근본 원인: BroadcastManager는 Intent 전송, 키명만 전달
+# 예: key_permission_denied
+^Landroidx/localbroadcastmanager/content/LocalBroadcastManager;->sendBroadcast\(Landroid/content/Intent;\)Z$
+
+# --- Chromium Share Utility ---
+# 근본 원인: Share 유틸리티 디렉토리 getter, 경로 반환하지만 share 디렉토리만 (범용 패턴 아님, 주석 처리)
+# ^Lorg/chromium/xwhale/share/ShareImageFileUtils;->getSharedFilesDirectory\(\)Ljava/io/File;$
+
+# --- Crypto Signature Utility ---
+# 근본 원인: 암호화 타입 변환, 타입명만 전달 (파일 I/O 아님)
+# 예: RSA
+^Lcom/google/crypto/tink/signature/internal/SigUtil;->toHashType\(Lcom/google/crypto/tink/proto/HashType;\)Lcom/google/crypto/tink/subtle/Enums\$HashType;$
+
+# --- Firebase ID Manager ---
+# 근본 원인: Firebase ID 생성 시 로그 메시지만 전달
+# 예: "Fetched Firebase Installation ID:"
+^Lcom/google/firebase/crashlytics/internal/common/IdManager;->createSyntheticFid\(\)Ljava/lang/String;$
+
+# --- Naver File Manager exists ---
+# 근본 원인: FileManager의 exists() 체크, 에러 메시지만 전달
+# 예: "content scheme does not support overwrite"
+^Lcom/navercorp/vtech/filemanager/PrismFileManager;->exists\(Landroid/net/Uri;\)Z$
+
+# --- Naver NID Utility getter ---
+# 근본 원인: NID 유틸리티 getter는 필드명/설정값만 반환
+# 예: entryPoint, Platform
+^Lcom/navercorp/nid/legacy/crypto/RSAKeyManager;->getRSAKey\(\)Lcom/navercorp/nid/legacy/crypto/RSAKey;$
+^Lcom/navercorp/nid/legacy/util/DeviceUtil;->getAndroidVersion\(\)Ljava/lang/String;$
+
+# --- Naver Nelo Storage Adapter ---
+# 근본 원인: Storage threshold 체크, 로그 메시지만 전달
+# 예: "log", "Delete old events failed"
+^Lcom/naver/nelo/sdk/android/buffer/StorageAdapter;->belowMemThreshold\$nelo_sdk_release\(Lcom/naver/nelo/sdk/android/log/Log;\)J$
+
+# --- Naver NID Repository Query ---
+# 근본 원인: 쿼리 빌더, 파라미터명만 전달
+# 예: version, number
+^Lcom/navercorp/nid/login/network/repository/NidRepositoryKt;->query\(Ljava/util/LinkedHashMap;\)Ljava/lang/String;$
+
+# --- Naver Rooted Check ---
+# 근본 원인: Root 체크는 상태값만 반환 (파일 I/O 아님)
+# 예: "Rooted" (상수명)
+^Lcom/naver/nelo/sdk/android/utils/AndroidUtil;->isRooted\(\)Z$
+
+# --- BA/Analytics 로그 전송 메서드 (범용 패턴) ---
+# 근본 원인: Behavior Analytics 로그 전송 시 이벤트명/필드명만 전달
+# 모든 앱에서 *BALog, *Analytics, *Tracker 클래스는 이벤트 로깅용
+# 예: memberPermission, menuSelect, event, item, section_home_my_cafe
+;->send.*Click.*\(\)V$
+;->send.*Log\(\)V$
+;->send.*Event\(\)V$
+BALog;->send
+
+# --- UI 초기화/바인딩 메서드 (범용 패턴) ---
+# 근본 원인: UI 컴포넌트 초기화 시 뷰 ID/필드명만 전달
+# init*, setup*, bind* 메서드는 UI 설정이며 파일 I/O 아님
+# 예: editorKey (initRecyclerView)
+;->initRecyclerView\(\)V$
+;->initView\(\)V$
+;->setupView\(\)V$
+;->bindView\(\)V$
+
+# --- Activity/Component getter (범용 패턴) ---
+# 근본 원인: Activity/Component getter는 컴포넌트 참조만 반환
+# 클래스명/컴포넌트명만 전달되며 파일 경로 아님
+# 주의: getLauncherHomeActivity()는 TP 손실 위험이 있어 주석 처리 (cache/webview 경로)
+# ;->getLauncher.*Activity\(\)
+# ;->getHomeActivity\(\)
+
+# --- URL/Request Factory (범용 패턴) ---
+# 근본 원인: URL/Request Factory는 URL 생성이며 파일 I/O 아님
+# 에러 메시지/설정값만 전달
+# 예: "OfferAD prepare" (SspAdRequestUrlFactory)
+UrlFactory;->
+RequestFactory;->
+AdRequestUrlFactory;->
+
+# --- Firebase Messaging getInstance ---
+# 근본 원인: Firebase Messaging singleton getter는 에러 메시지 전달
+# 예: "device register fail. context is null."
+^Lcom/google/firebase/messaging/FirebaseMessaging;->getInstance\(\)Lcom/google/firebase/messaging/FirebaseMessaging;$
+
+# --- ApplicationUtil getUserAgent ---
+# 근본 원인: UserAgent getter는 설정 키명만 반환
+# 예: oauth_signature
+^Lcom/navercorp/nid/utils/ApplicationUtil;->getUserAgent\(Landroid/content/Context;\)Ljava/lang/String;$
+
+# --- Exception 생성자/Factory (범용 패턴) ---
+# 근본 원인: Exception 생성 시 에러 메시지만 전달 (파일 경로 아님)
+# 모든 앱의 Exception 생성자는 에러 메시지만 전달
+# 예: "No JsonAdapter for", "No position has been marked"
+Exception;-><init>
+IllegalArgumentException;-><init>
+UnsupportedOperationException;-><init>
+;->reset\(\)Ljava/lang/UnsupportedOperationException;$
+
+# --- Moshi JSON 파싱 Exception ---
+# 근본 원인: Moshi JSON 라이브러리의 Exception 처리, 에러 메시지만 전달
+^Lcom/squareup/moshi/Moshi\$LookupChain;->b\(Ljava/lang/IllegalArgumentException;\)Ljava/lang/IllegalArgumentException;$
+
+# --- Apache Commons I/O Exception ---
+# 근본 원인: Apache Commons I/O 라이브러리의 Exception 처리
+^Lorg/apache/commons/io/input/UnsupportedOperationExceptions;->reset\(\)Ljava/lang/UnsupportedOperationException;$
+
+# --- Firebase Crashlytics ApplicationExitInfo ---
+# 근본 원인: Firebase Crashlytics의 ApplicationExitInfo 변환, 로그 메시지만 전달
+# 예: "No relevant ApplicationExitInfo occurred during session:"
+^Lcom/google/firebase/crashlytics/internal/common/SessionReportingCoordinator;->convertApplicationExitInfo\(Landroid/app/ApplicationExitInfo;\)Lcom/google/firebase/crashlytics/internal/model/CrashlyticsReport\$ApplicationExitInfo;$
+
+# --- SpongyCastle ASN1 getInstance() 추가 패턴 ---
+# 근본 원인: SpongyCastle ASN1 getInstance()는 상수명/타입명만 전달
+# 예: "Not a valid IES Parameter encoding.", "PRIVATE_KEY_ENCRYPTION", "SECRET_KEY_ENCRYPTION", "STORE_ENCRYPTION"
+^Lorg/spongycastle/asn1/ASN1TaggedObject;->getInstance\(Ljava/lang/Object;\)Lorg/spongycastle/asn1/ASN1TaggedObject;$
+^Lorg/spongycastle/asn1/pkcs/PrivateKeyInfo;->getInstance\(Ljava/lang/Object;\)Lorg/spongycastle/asn1/pkcs/PrivateKeyInfo;$
+^Lorg/spongycastle/asn1/bc/SecretKeyData;->getInstance\(Ljava/lang/Object;\)Lorg/spongycastle/asn1/bc/SecretKeyData;$
+^Lorg/spongycastle/asn1/bc/ObjectStoreData;->getInstance\(Ljava/lang/Object;\)Lorg/spongycastle/asn1/bc/ObjectStoreData;$
+
+# --- SpongyCastle 인증서 생성 ---
+# 근본 원인: 인증서 Factory는 에러 메시지만 전달
+# 예: "Problem while extracting certificates from X.509 store."
+^Lorg/spongycastle/jcajce/provider/asymmetric/x509/CertificateFactory;->engineGenerateCertificate\(Ljava/io/InputStream;\)Ljava/security/cert/Certificate;$
+
+# --- DTD Scanner/Parser peek() (범용 패턴) ---
+# 근본 원인: Scanner/Parser의 peek()는 토큰명만 반환 (파일 경로 아님)
+# 모든 파서 라이브러리에 적용 가능
+# 예: "PUBLIC"
+Scanner;->peek\(\)
+Parser;->peek\(\)
+;->nextToken\(\)
+
+# --- Preference Helper byDefault()/getInstance() ---
+# 근본 원인: Preference Helper의 byDefault()는 클래스명만 반환
+# 예: "PreferenceHelper"
+;->byDefault\(\)
+PreferenceHelper;->getInstance\(\)
+DefaultPreferences;->getInstance\(\)
+
+# --- Compose UI Text append() ---
+# 근본 원인: Compose UI의 append()는 텍스트만 전달 (파일 경로 아님)
+# 예: "RegionMenuItem"
+^Landroidx/compose/ui/text/AnnotatedString\$Builder;->append\(Ljava/lang/String;\)V$
+
+# --- Network API Service getter (범용 패턴) ---
+# 근본 원인: Network API Service getter는 로그 태그만 전달
+# 예: "RequestParm:"
+;->getApiService\(\)
+;->getRetrofitClient\(\)
+RetrofitClient;->
+ApiClient;->
+
+# --- JSON 파싱 메서드 (범용 패턴) ---
+# 근본 원인: JSON 파싱 메서드는 필드명을 인자로 받음 (파일 경로 아님)
+# COMMENTED OUT: JSON 파싱 메서드는 경로 패턴 기반 필터링으로 대체
+# 근본 원인: parseFromJson은 일반적으로 JSON 필드명을 반환하지만,
+# /cache/data, /files/xxx 같은 명확한 디렉토리 경로도 추출할 수 있음
+# → filter_artifacts.py에서 경로 패턴으로 구분
+# 모든 JSON 라이브러리에 적용 가능 (Jackson, Gson, Moshi, Instagram/Facebook JSON 파서 등)
+# 예: "suggested_hashtags", "user_id", "timestamp", "reels", "profile"
+# ;->parseFromJson\(
+# ;->fromJson\(
+# ;->toJsonValue\(
+# JsonParser;->parse\(
+
+# --- Builder 패턴 ->build() 메서드 (범용 패턴) ---
+# 근본 원인: Builder 패턴의 build()는 객체 생성 시 설정값/필드명만 전달
+# 파일 경로를 받지 않음 (단, File/Path/Uri builder 제외)
+# 예: ImmutableMap$Builder 등은 설정 키만 전달 (필드명, 상수값)
+# Threads APK 샘플: "reels", "account_type", "timestamp"
+^Lcom/google/common/collect/ImmutableMap\$Builder;->build\(\)
+^Lcom/google/common/collect/ImmutableList\$Builder;->build\(\)
+^Lcom/google/common/collect/ImmutableSet\$Builder;->build\(\)
+# 주의: Uri$Builder는 file:// URI로 파일 경로를 전달할 수 있어 주석 처리 (TP 손실)
+# ^Landroid/net/Uri\$Builder;->build\(\)Landroid/net/Uri;
+^Landroid/app/Notification\$Builder;->build\(\)
+\$Builder;->build\(\)Lcom/google/common/collect/Immutable
+
+# --- ContentResolver URI 해석 (범용 패턴) ---
+# 근본 원인: ContentResolver는 content:// URI를 처리하며 직접 파일 경로가 아님
+# URI로 전달된 문자열은 content provider의 virtual path
+# 예: content://com.instagram.barcelona.provider/suggested_hashtags
+^Landroid/content/ContentResolver;->openInputStream\(Landroid/net/Uri;\)
+^Landroid/content/ContentResolver;->openOutputStream\(Landroid/net/Uri;\)
+^Landroid/content/ContentResolver;->query\(Landroid/net/Uri;
+
+# --- OutputStream/Writer 바이트 쓰기 (범용 패턴) ---
+# 근본 원인: OutputStream->write()는 바이트 데이터를 쓰며, 인자는 데이터/인코딩명/상태값
+# 파일 경로가 아닌 암호화 알고리즘명, 인코딩명, 상수값만 전달
+# 예: "HmacSHA256", "AES", "UTF-8", "RSA", "Canceled", "Success"
+# Threads 샘플: "UTF-8", "Canceled" (배열 쓰기 버전)
+^Ljava/io/OutputStream;->write\(I\)V$
+^Ljava/io/OutputStream;->write\(\[B\)V$
+^Ljava/io/OutputStream;->write\(\[BII\)V$
+^Ljava/io/Writer;->write\(Ljava/lang/String;\)V$
+^Ljava/io/Writer;->write\(\[CII\)V$
+^Ljava/io/BufferedWriter;->write\(Ljava/lang/String;\)V$
+
+# --- Provider/Manager 등록 메서드 (범용 패턴) ---
+# 근본 원인: Provider/Manager 등록 시 클래스명/컴포넌트명만 전달
+# 파일 경로가 아닌 fully-qualified class name
+# 예: "org.chromium.net.impl.NativeCronetProvider"
+;->addCronetProviderImplByClassName\(
+;->addProvider\(Ljava/lang/String;
+;->registerProvider\(
+;->setProviderClass\(
+
+# --- Map/Collection put/add 메서드 (범용 패턴) ---
+# 근본 원인: Map/Collection의 put/add는 키/값을 저장하며 파일 I/O 아님
+# 필드명, 설정 키명만 전달 (단, 실제 file path도 들어갈 수 있어 신중히 적용)
+# 예: "account_type", "user_id" (설정 키), NOT /data/data/...
+# 주의: 실제 파일 경로가 Map에 들어가는 케이스도 있어 주석 처리
+# ^Ljava/util/Map;->put\(Ljava/lang/Object;Ljava/lang/Object;\)
+# ^Ljava/util/HashMap;->put\(
+# ^Ljava/util/LinkedHashMap;->put\(
+
+# --- Encoder/Decoder 메서드 (범용 패턴) ---
+# 근본 원인: Encoder/Decoder는 인코딩 방식명만 전달 (파일 경로 아님)
+# Base64, Hex, UTF-8 등 인코딩명
+# 예: "UTF-8", "base64", "hex"
+Encoder;->encode\(
+Decoder;->decode\(
+;->encodeToString\(
+;->decodeFromString\(
+
+# --- Factory getInstance()/create() 메서드 (범용 패턴) ---
+# 근본 원인: Factory의 getInstance()/create()는 에러 메시지/타입명만 전달
+# 파일 경로가 아닌 클래스명, 타입명, 에러 메시지
+# 예: "Failed to create instance", "default"
+# 주의: 일부 Factory는 실제 파일 경로를 다루므로 광범위 적용 불가, 주석 처리
+# Factory;->getInstance\(\)
+# Factory;->create\(
+
+# --- toString()/toStringValue() 메서드 (범용 패턴) ---
+# 근본 원인: toString()은 객체의 문자열 표현을 반환하며 파일 I/O 아님
+# 필드명, 클래스명, 디버그 메시지만 포함
+# 예: "User{id=123, name=John}"
+;->toString\(\)Ljava/lang/String;$
+;->toStringValue\(\)
+
+# ============================================
+# v11 추가 패턴 (2025-12-17)
+# 근본 원인: 로그 출력, SharedPreferences, 암호화/UI Builder
+# ============================================
+
+# --- PrintWriter/Logger 출력 메서드 (범용 패턴) ---
+# 근본 원인: PrintWriter, Logger 등의 print/println은 로그 메시지를 출력
+# 파일 경로가 아닌 로그 메시지, 디버그 문자열만 전달
+# 예: "Pending Actions:", "Closing camera.", "Unknown failure."
+^Ljava/io/PrintWriter;->print\(Ljava/lang/String;\)V$
+^Ljava/io/PrintWriter;->println\(Ljava/lang/String;\)V$
+^Ljava/io/PrintWriter;->println\(\)V$
+^Ljava/io/PrintStream;->print\(Ljava/lang/String;\)V$
+^Ljava/io/PrintStream;->println\(Ljava/lang/String;\)V$
+
+# --- SharedPreferences Editor commit/apply (범용 패턴) ---
+# 근본 원인: SharedPreferences는 key-value 저장소, commit/apply는 설정 키명만 전달
+# 파일 경로가 아닌 설정 키명 (예: "dex.time.", "bladerunnerSandbox", "string")
+# Threads 샘플: "dex.time.", "bladerunnerSandbox"
+^Landroid/content/SharedPreferences\$Editor;->commit\(\)Z$
+^Landroid/content/SharedPreferences\$Editor;->apply\(\)V$
+
+# --- SharedPreferences Editor put methods (범용 패턴) ---
+# 근본 원인: SharedPreferences put 메서드는 설정 키명을 첫 번째 인자로 받음
+# 파일 경로가 아닌 설정 키명 (예: "is_first_session", "has_seen_music_pick_disclosure")
+# Threads 샘플: 218+ occurrences (putBoolean: 67, putInt: 51, putString: 51, putLong: 34, putFloat: 15, putStringSet: 5)
+^Landroid/content/SharedPreferences\$Editor;->putBoolean\(Ljava/lang/String;Z\)
+^Landroid/content/SharedPreferences\$Editor;->putInt\(Ljava/lang/String;I\)
+^Landroid/content/SharedPreferences\$Editor;->putLong\(Ljava/lang/String;J\)
+^Landroid/content/SharedPreferences\$Editor;->putString\(Ljava/lang/String;Ljava/lang/String;\)
+^Landroid/content/SharedPreferences\$Editor;->putFloat\(Ljava/lang/String;F\)
+^Landroid/content/SharedPreferences\$Editor;->putStringSet\(Ljava/lang/String;Ljava/util/Set;\)
+
+# --- 암호화 파라미터 Builder (범용 패턴) ---
+# 근본 원인: 암호화 설정 Builder는 암호화 알고리즘/패딩 방식명만 전달
+# 파일 경로가 아닌 암호화 설정값 (예: "NoPadding", "PKCS1Padding")
+^Landroid/security/keystore/KeyGenParameterSpec\$Builder;->build\(\)
+^Ljavax/crypto/Cipher;->getInstance\(Ljava/lang/String;\)
+
+# --- UI Builder 패턴 (범용 패턴) ---
+# 근본 원인: UI Builder (AlertDialog, FontFamily, TtsSpan, ViewTranslation 등)는 UI 설정만 전달
+# 파일 경로가 아닌 UI 메시지, 폰트명, TTS 설정, Android 번역 상수
+# 예: AlertDialog 메시지, 폰트 패밀리명, "android:text", "android:hint"
+^Landroidx/appcompat/app/AlertDialog\$Builder;->create\(\)
+^Landroid/app/AlertDialog\$Builder;->create\(\)
+^Landroid/graphics/fonts/FontFamily\$Builder;->build\(\)
+^Landroid/text/style/TtsSpan\$Builder;->build\(\)
+^Landroid/view/translation/ViewTranslationRequest\$Builder;->build\(\)
+
+# --- HTTP 메서드/헤더 설정 (범용 패턴) ---
+# 근본 원인: HTTP 연결 설정 메서드는 HTTP 메서드명/헤더명만 전달
+# 파일 경로가 아닌 HTTP 메서드 (GET, POST), 헤더명 (Content-Type, content-length)
+# Threads 샘플: "content-length", "Content-Type"
+^Ljava/net/HttpURLConnection;->setRequestMethod\(Ljava/lang/String;\)V$
+^Ljava/net/URLConnection;->setRequestProperty\(Ljava/lang/String;Ljava/lang/String;\)V$
+
+# --- Bitmap 압축 메서드 (범용 패턴) ---
+# 근본 원인: Bitmap->compress()는 압축 포맷명만 전달 (JPEG, PNG, WEBP)
+# 파일 경로가 아닌 이미지 포맷명
+^Landroid/graphics/Bitmap;->compress\(Landroid/graphics/Bitmap\$CompressFormat;ILjava/io/OutputStream;\)Z$
+
+# --- Audio/Media Builder 패턴 (범용 패턴) ---
+# 근본 원인: Audio/Media 설정 Builder는 오디오 설정값만 전달
+# 파일 경로가 아닌 샘플레이트, 채널, 포맷 등 오디오 설정
+^Landroid/media/AudioFormat\$Builder;->build\(\)Landroid/media/AudioFormat;$
+^Landroid/media/AudioAttributes\$Builder;->build\(\)Landroid/media/AudioAttributes;$
+
+# --- JobInfo/NetworkRequest Builder (범용 패턴) ---
+# 근본 원인: JobInfo/NetworkRequest Builder는 작업 스케줄링/네트워크 요청 설정만 전달
+# 파일 경로가 아닌 Job ID, 네트워크 타입, 주기 등 스케줄링 설정
+^Landroid/app/job/JobInfo\$Builder;->build\(\)Landroid/app/job/JobInfo;$
+^Landroid/net/NetworkRequest\$Builder;->build\(\)Landroid/net/NetworkRequest;$
+
+# --- ContentResolver 추가 메서드 (범용 패턴) ---
+# 근본 원인: ContentResolver는 content:// URI 처리, 파일 경로 아님
+# openFileDescriptor, insert 등도 content URI만 전달
+^Landroid/content/ContentResolver;->openFileDescriptor\(Landroid/net/Uri;
+^Landroid/content/ContentResolver;->insert\(Landroid/net/Uri;
+
+# --- WebView UI 설정 메서드 (범용 패턴) ---
+# 근본 원인: WebView 설정 메서드는 리스너/설정값만 전달
+# 파일 경로 아님
+^Landroid/webkit/WebView;->setDownloadListener\(
+
+# --- Facebook Profilo Logger (범용 패턴) ---
+# 근본 원인: Facebook Profilo 프로파일링 로거는 로그 메시지만 전달
+# 파일 경로가 아닌 프로파일링 메시지, 설정 키
+^Lcom/facebook/profilo/logger/MultiBufferLogger;->writeBytesEntry\(
+^Lcom/facebook/profilo/logger/BufferLogger;->writeStandardEntry\(
+^Lcom/facebook/profilo/provider/memory/MemoryAllocationProvider;->startProfiling\(\)V$
+
+# --- Facebook Dex/Superpack Builder (범용 패턴) ---
+# 근본 원인: Facebook Dex 처리 Builder는 설정값만 전달
+# 파일 경로 아님
+^Lcom/facebook/common/dextricks/SuperpackInputDexIterator\$Builder;->build\(\)
+
+# --- Gson JsonReader (범용 패턴) ---
+# 근본 원인: Gson JsonReader는 JSON 필드명/값을 반환
+# 파일 경로가 아닌 JSON 필드명 (예: "name", "type", "value")
+# Threads 샘플: 11 occurrences
+^Lcom/google/gson/stream/JsonReader;->A0O\(\)Ljava/lang/String;$
+^Lcom/google/gson/stream/JsonReader;->nextString\(\)Ljava/lang/String;$
+^Lcom/google/gson/stream/JsonReader;->nextName\(\)Ljava/lang/String;$
+
+# --- Camera CaptureRequest Builder (범용 패턴) ---
+# 근본 원인: Camera CaptureRequest Builder는 카메라 캡처 설정만 전달
+# 파일 경로가 아닌 카메라 설정 (ISO, 초점, 플래시 모드 등)
+^Landroid/hardware/camera2/CaptureRequest\$Builder;->build\(\)Landroid/hardware/camera2/CaptureRequest;$
+
+# --- Instagram/Facebook ProGuard obfuscated getter/setter/logger (앱 특화 패턴) ---
+# 근본 원인: ProGuard obfuscation으로 생성된 LX/LY/LZ 메서드는 getter/setter/logger
+# 파일 경로가 아닌 앱 내부 문자열 (설정값, 필드명, A/B 테스트 실험명, 에러 메시지)
+# Threads 샘플: "true", "INSTALLATION", "is_dark_mode", "b4a_maa_login_homepage_landing_exp"
+# LX/271->A07: 로그/설정 getter (25 occurrences)
+# LX/Kd5->A01: 비트맵 처리 logger (25 occurrences)
+# LX/2xc->A02: 필드값 getter (24 occurrences)
+^LX/271;->A07\(Landroid/content/Context;\)Ljava/lang/String;$
+^LX/Kd5;->A01\(Landroid/graphics/Bitmap;\)V$
+^LX/2xc;->A02\(LX/2xf;\)Ljava/lang/String;$
+^LX/6qm;->A01\(Landroid/content/Context;\)V$
+^LX/271;->A05\(\)Ljava/lang/String;$
+^LX/271;->A06\(Landroid/content/Context;\)Ljava/lang/String;$
+^LX/MgG;->A0H\(Lcom/instagram/common/session/UserSession;\)Ljava/util/List;$
+^LX/MgG;->A0f\(Lcom/instagram/common/session/UserSession;\)Z$
+^LX/MgG;->A0g\(Lcom/instagram/common/session/UserSession;\)Z$
+^LX/MgG;->A0h\(Lcom/instagram/common/session/UserSession;\)Z$
+^LX/120;->A15\(LX/0vw;\)V$
+^LX/AFI;->A06\(\)Ljava/lang/String;$
+^LX/Dhi;->A01\(\)Ljava/lang/String;$
+^LX/Dhi;->A05\(LX/0vw;\)V$
+^LX/Dhi;->A0C\(LX/0wb;\)V$
+^LX/Eb4;->E0o\(Ljava/lang/Integer;\)V$
+^LX/Eb4;->D6T\(\)Z$
+^LX/HBM;->A00\(\)LX/HBM;$
+^LX/0yi;->A00\(\)LX/0yi;$
+^LX/1nA;->A02\(Ljava/lang/String;\)LX/3MA;$
+^LX/4op;->A00\(\)LX/4qz;$
+^LX/Gam;->A0A\(Ljava/lang/String;\)Ljava/lang/String;$
+^LX/BVm;->A08\(LX/AOY;\)V$
+^LX/Bzw;->A04\(\)LX/2Ys;$
+^LX/DzQ;->A0V\(\)LX/ABG;$
+^LX/A5w;->A00\(Landroid/graphics/Bitmap;\)Lcom/instagram/common/util/gradient/BackgroundGradientColors;$
+^Lcom/instagram/base/activity/BaseFragmentActivity;->onCreate\(Landroid/os/Bundle;\)V$
+^Lcom/google/android/gms/phenotype/ExperimentTokens;->A01\(Ljava/lang/String;Ljava/lang/StringBuilder;\[\[B\)V$
+^LX/0bi;->A00\(LX/0bi;\)V$
+^LX/2xc;->A01\(LX/2xf;\)LX/2xx;$
+^Lcom/instagram/basel/text/composer/TextComposerFragment;->A2A\(Z\)V$
+^LX/Bzw;->A0E\(Z\)V$
+^LX/Bzw;->A0D\(Z\)V$
+^LX/Op4;->A0E\(\)V$
+^LX/11Q;->A0w\(Landroid/app/Activity;\)V$
+^LX/2zd;->A09\(I\)LX/05j;$
+^LX/2zd;->A0B\(J\)LX/05j;$
+^LX/0XV;->CbS\(Ljava/lang/String;\)Z$
+^LX/8vt;->A03\(\)LX/1II;$
+^LX/0ZM;->A0L\(\)LX/0ZP;$
+^LX/Gfb;->A02\(\)V$
+^LX/APK;->A02\(Ljava/lang/Integer;\)Landroid/text/Layout\$Alignment;$
+^LX/2KJ;->A05\(LX/1Hw;\)Ljava/util/HashMap;$
+^LX/DMM;->A03\(\)LX/3aZ;$
+^LX/Au0;->A07\(\)V$
+^LX/7sm;->A00\(LX/0VS;\)LX/0PT;$
+^LX/3lA;->A0A\(LX/4aX;\)Ljava/lang/String;$
+^LX/EAa;->D67\(Ljava/lang/Integer;\)V$
+^LX/KVT;->A04\(\)V$
+^LX/Oyt;->A01\(\)V$
+^LX/CRj;->A03\(\)V$
+^LX/Ny0;->A01\(\)LX/NJF;$
+^LX/6qb;->A01\(Landroid/content/Context;\)V$
+^LX/9Nc;->A02\(Ljava/lang/Integer;\)V$
+^LX/8nF;->A00\(LX/1Hw;\)LX/1Iq;$
+^LX/DRP;->A06\(\)Ljava/util/List;$
+^Lcom/instagram/mainfeed/network/ColdStartFeedCache;->A00\(Lcom/instagram/mainfeed/network/ColdStartFeedCache;\)J$
+
+# === v19: Facebook Profilo Logging Framework ===
+# Root cause: Profilo는 Facebook의 성능 프로파일링 프레임워크
+# BufferLogger, MultiBufferLogger는 성능 메트릭/트레이스를 로깅
+# 첫 String 인자는 로그 메시지, 카테고리 이름 등이지 파일 경로 아님
+^Lcom/facebook/profilo/logger/BufferLogger;->writeBytesEntry\(Lcom/facebook/profilo/mmapbuf/core/Buffer;IIILjava/lang/String;\)I$
+^Lcom/facebook/profilo/logger/MultiBufferLogger;->writeBytesEntry\(IIILjava/lang/String;\)I$
+^Lcom/facebook/profilo/logger/MultiBufferLogger;->writeStandardEntry\(IIJIIIJ\)I$
+^Lcom/facebook/profilo/logger/BufferLogger;->writeStandardEntry\(Lcom/facebook/profilo/mmapbuf/core/Buffer;IIJIIIJ\)I$
+
+# === v19: Spotify SDK OAuth ===
+# Root cause: Spotify SDK의 OAuth 인증 요청 빌더
+# URI 파라미터로 "android.support.customtabs.extra.SESSION" 같은 키 이름 받음
+^Lcom/spotify/sdk/android/auth/AuthorizationRequest;->A00\(\)Landroid/net/Uri;$
+
+# === v19: Android MediaMuxer ===
+# Root cause: MediaMuxer는 미디어 파일 muxing (영상+오디오 결합)
+# 경로 인자가 종종 concatenated string이거나 임시 경로
+# FP 샘플에서 실제 경로보다 변수명/상수가 더 많이 관찰됨
+^Landroid/media/MediaMuxer;-><init>\(Ljava/lang/String;I\)V$
+
+# === v19: Instagram/Facebook Obfuscated Methods (추가) ===
+# Root cause: Instagram/Facebook ProGuard 난독화 메서드 (getter/setter/logger/config)
+# v18 FP 분석에서 추가로 발견된 패턴들
+^LX/4fs;->A06\(\)V$
+^LX/BM8;-><init>\(Ljava/lang/String;\)V$
+^LX/450;->invoke\(Ljava/lang/Object;\)Ljava/lang/Object;$
+^Lcom/instagram/mainfeed/network/ColdStartFeedCache;->A04\(\)V$
+^LX/8yK;->A0C\(Ljava/lang/String;\)V$
+^LX/DBO;->A00\(\)Lcom/facebook/graphservice/interfaces/TreeSerializer;$
+^LX/8oK;->A00\(\)V$
+^LX/AOv;->A02\(Ljava/io/File;\)Lcom/instagram/common/util/gradient/BackgroundGradientColors;$
+^LX/120;->A0b\(Landroidx/fragment/app/Fragment;\)Ljava/lang/String;$
+^Lcom/meta/mfa/platform/MfaPlatformCredentialManager;->A03\(\)LX/JoO;$
+^LX/DRP;->A09\(\)Z$
+^LX/MgG;->A0A\(Lcom/instagram/common/session/UserSession;\)I$
+^LX/LuX;->A0E\(Ljava/lang/String;\)LX/1FV;$
+^LX/KqR;->A00\(Lcom/instagram/common/session/UserSession;\)Ljava/util/concurrent/CompletableFuture;$
+^LX/0La;->A01\(\[Ljava/lang/String;\)V$
+^LX/1cf;->A01\(S\)Ljava/lang/String;$
+^LX/03a;->A00\(Ljava/io/File;\)Ljava/lang/String;$
+^LX/1nA;->A04\(Ljava/lang/String;\)LX/3MA;$
+^LX/1Ty;->A03\(Landroid/content/Context;\)V$
+^LX/3hb;->A01\(Ljava/lang/String;\)Ljava/io/ObjectOutputStream;$
+^LX/12q;->invoke\(\)Ljava/lang/Object;$
+^LX/3yb;->A00\(\)V$
+^LX/1ip;->A05\(\)V$
+^LX/4qc;->A07\(LX/4ib;\)V$
+^LX/4qp;->A04\(LX/Kwa;\)V$
+^LX/GaN;->A00\(Landroid/content/Context;\)LX/GaM;$
+^LX/1ps;-><init>\(Landroid/content/Context;\)V$
+^LX/182;->A04\(Ljava/io/File;\)V$
+^LX/14X;->A01\(Ljava/lang/Throwable;\)V$
+^LX/3dU;->A00\(\)Ljava/lang/String;$
+^LX/2KL;->A02\(\)V$
+^LX/1mt;->A03\(Ljava/lang/String;\)V$
+^LX/7qm;-><init>\(Landroid/content/Context;\)V$
+^LX/AuT;->A01\(LX/7wt;\)V$
+
+# === v19: Facebook Common Dextricks ===
+# Root cause: DexStore는 DEX 파일 최적화 관리 시스템
+# 상태 기록, 임시 디렉토리 생성 등의 메서드는 내부 상태/디렉토리명 받음
+^Lcom/facebook/common/dextricks/DexStore;->writeStatusLocked\(J\)V$
+^Lcom/facebook/common/dextricks/DexStore;->makeTemporaryDirectory\(Ljava/lang/String;\)Lcom/facebook/common/dextricks/DexStore\$TmpDir;$
+^Lcom/facebook/common/dextricks/DexStore;->forceRegenerateOnNextLoad\(\)V$
+
+# === v19: Facebook MSYS FileManager ===
+# Root cause: MSYS (Messaging System) FileManager
+# getFileFromPathWithOptionalScheme는 "scheme://path" 형태의 URI 받음
+# FP에서 scheme 부분이나 변수명이 파일 경로처럼 추출됨
+^Lcom/facebook/msys/mci/FileManager;->getFileFromPathWithOptionalScheme\(Ljava/lang/String;\)Ljava/io/File;$
+
+# === v20: Android ShortcutInfo Builder ===
+# Root cause: ShortcutInfo$Builder는 앱 바로가기 생성
+# 바로가기 ID, 액션 이름 등이 String 인자로 전달됨
+# FP 샘플: "switcher_home_screen_shortcuts"
+^Landroid/content/pm/ShortcutInfo\$Builder;->build\(\)Landroid/content/pm/ShortcutInfo;$
+
+# === v20: Conscrypt Security Provider ===
+# Root cause: Conscrypt는 보안 라이브러리, ProviderBuilder는 설정 객체 빌드
+# 보안 알고리즘 이름, 설정값 등이 전달되지 파일 경로 아님
+^Lorg/conscrypt/Conscrypt\$ProviderBuilder;->build\(\)Ljava/security/Provider;$
+
+# === v20: Facebook Dextricks Odex Scheme ===
+# Root cause: Facebook의 DEX 최적화 시스템
+# OdexScheme은 DEX 파일 압축 해제 여부를 체크
+# 내부 메서드명, 상태 문자열 등이 파일 경로처럼 추출됨
+^Lcom/facebook/common/dextricks/OdexSchemeOreo;->needsUnpack\(\)Z$
+^Lcom/facebook/common/dextricks/OdexScheme;->needsUnpack\(\)Z$
+
+# === v20: Gson JsonReader 추가 메서드 ===
+# Root cause: Gson JsonReader의 integer 읽기 메서드
+# JSON 필드값(숫자)을 읽지만, 필드명이 경로처럼 추출될 수 있음
+^Lcom/google/gson/stream/JsonReader;->A0I\(\)I$
+
+# === v20: Instagram/Facebook Obfuscated Methods (v19 FP 추가) ===
+# Root cause: v19 FP 분석에서 추가로 발견된 Instagram/Facebook 난독화 메서드
+^LX/DHZ;->A01\(LX/DHZ;\)V$
+^LX/Gcl;->A03\(Landroid/graphics/drawable/Drawable;\)Ljava/lang/String;$
+^LX/KVT;->A05\(\)V$
+^LX/KQC;->A00\(Ljava/util/List;\)V$
+^LX/NUJ;->A00\(Ljava/lang/String;\)LX/ADS;$
+^LX/0Hw;->A02\(\)Ljava/lang/String;$
+^LX/2gt;->A00\(Ljava/lang/String;\)Ljava/io/File;$
+^LX/2KJ;->A02\(LX/1Hw;\)Ljava/lang/Object;$
+^LX/2KJ;->A06\(Ljava/lang/String;\)Ljava/util/HashMap;$
+^LX/JlX;->A02\(\)Ljava/lang/String;$
+^LX/KKq;->A00\(Ljava/lang/String;\)V$
+^LX/ARy;->A0B\(\)V$
+^Lcom/instagram/barcelona/app/BarcelonaAppShell;->A00\(\)V$
+^LX/6IJ;->A2A\(Landroid/graphics/Bitmap;\)V$
+^LX/HjN;->A02\(\)V$
+^LX/8Ok;->A01\(\)V$
+^LX/Dhi;->A03\(LX/0TT;\)Ljava/lang/String;$
+^LX/4S1;->A0E\(LX/4S1;\)V$
+^LX/86C;->A2A\(\)V$
+^Lcom/instagram/nux/impl/dynamicflow/onboarding/OnboardingActivity;->A08\(Lcom/instagram/nux/impl/dynamicflow/onboarding/OnboardingActivity;\)V$
+^LX/Jn6;->A01\(\)Ljava/lang/String;$
+^LX/KEk;->A09\(\)V$
+^LX/1Mg;->A00\(Ljava/lang/String;\)Landroid/net/Uri;$
+^LX/Cn3;->A00\(Lorg/json/JSONObject;\)LX/1Ip;$
+^LX/42u;->A0T\(LX/Oed;\)V$
+^LX/40R;->A0Y\(LX/HkZ;\)V$
+^LX/9d2;->A2A\(\)V$
+^LX/Ivs;->A00\(\)LX/EKu;$
+^LX/9d2;->A0A\(LX/9d2;\)V$
+^LX/Gam;->A01\(\)Ljava/io/File;$
+^LX/AOU;-><init>\(LX/9Dk;\)V$
+^LX/Atp;->A09\(LX/Atp;\)V$
+^LX/7eT;->A00\(LX/1Hw;\)LX/7wP;$
+^LX/HeN;->A00\(Ljava/lang/String;\)V$
+^Lcom/facebookpay/form/fragment/model/FormLoggingEvents;->writeToParcel\(Landroid/os/Parcel;I\)V$
+^LX/DOM;->A03\(LX/Lex;\)\[Ljava/lang/String;$
+
+# === v21: Android Notification Action Builder ===
+# Root cause: Notification$Action$Builder는 알림 액션 생성
+# 액션 타이틀, 인텐트 등을 설정하지 파일 I/O 아님
+^Landroid/app/Notification\$Action\$Builder;->build\(\)Landroid/app/Notification\$Action;$
+
+# === v21: Facebook Dextricks 추가 메서드 ===
+# Root cause: DexStore, OreoFileUtils 등 DEX 최적화 관련 추가 메서드
+# 내부 상태 관리, 체크섬 계산 등으로 메서드명/상수가 경로처럼 추출됨
+^Lcom/facebook/common/dextricks/OdexSchemeOreo;->serializeDex2ChecksumMap\(Ljava/io/File;\)V$
+^Lcom/facebook/common/dextricks/DexStore;->getRegenFile\(\)Ljava/io/File;$
+^Lcom/facebook/common/dextricks/DexStore;->readCurrentDepBlock\(\)\[B$
+^Lcom/facebook/common/dextricks/DexStore;->touchRegenStamp\(\)V$
+^Lcom/facebook/common/dextricks/OreoFileUtils;->getVdex\(Ljava/io/File;\)Ljava/io/File;$
+^Lcom/facebook/common/dextricks/DexStore;->writeTxFailedStatusLocked\(J\)V$
+^Lcom/facebook/common/dextricks/DexStoreUtils;->getBaseDM\(Landroid/content/Context;\)Ljava/io/File;$
+^Lcom/facebook/common/dextricks/DexStore;->reportStatus\(\)J$
+
+# === v21: Facebook Profilo 추가 메서드 ===
+# Root cause: Profilo 프로파일링 시스템 추가 메서드
+^Lcom/facebook/profilo/provider/nativememory/NativeMemoryAllocationProvider;->startProfiling\(\)V$
+^Lcom/facebook/profilo/logger/BufferLogger;->writeAndWakeupTraceWriter\(Lcom/facebook/profilo/writer/NativeTraceWriter;Lcom/facebook/profilo/mmapbuf/core/Buffer;JIIIJ\)I$
+
+# === v21: Instagram/Facebook Obfuscated Methods (v20 FP 추가 - count=1) ===
+# Root cause: v20 FP에서 발견된 추가 난독화 메서드들
+# 각 메서드는 1회만 출현하지만 일반화 가능한 패턴들
+^LX/1jc;->A01\(\)I$
+^LX/0Ni;->A05\(Ljava/io/File;\)I$
+^LX/0Vi;->A03\(LX/0Xw;\)J$
+^LX/0og;->A01\(Landroid/content/Context;\)Ljava/io/File;$
+^LX/0qi;->A02\(Landroid/content/Context;\)V$
+^LX/0qk;->A02\(Landroid/content/Context;\)Ljava/util/ArrayList;$
+^LX/0Ms;->A00\(\[Ljava/lang/String;\)Landroid/net/Uri;$
+^LX/1nA;->A03\(Ljava/lang/String;\)LX/3MA;$
+^LX/1pr;-><init>\(Landroid/content/Context;\)V$
+^LX/1qg;-><init>\(Landroid/content/Context;\)V$
+^LX/1qj;->A03\(Lcom/facebook/profilo/ipc/TraceContext;\)V$
+^LX/1rs;->A00\(Ljava/lang/String;\)Ljava/io/File;$
+^LX/2fr;->A00\(Ljava/io/File;\)Z$
+^LX/2fp;->A03\(Ljava/io/File;\)Z$
+^LX/2fx;->A00\(Landroid/util/Pair;\)Ljava/io/File;$
+^LX/2zd;->A0J\(LX/1wo;\)V$
+^LX/4ei;->A00\(\)Ljava/lang/String;$
+^LX/8hv;->A0R\(\)V$
+^LX/6Jr;->A01\(LX/6Jr;\)V$
+^LX/Npw;->Dfi\(Ljava/lang/Exception;\)V$
+^LX/0XV;->An7\(Ljava/lang/String;\)LX/7ok;$
+^LX/KVT;->A03\(\)V$
+^LX/Qcu;->A02\(\)V$
+^LX/RAL;->invoke\(Ljava/lang/Object;\)Ljava/lang/Object;$
+^LX/4tx;->Acm\(\)Lcom/facebook/distribgw/client/DGWClientConfig;$
+^LX/Op4;->A0B\(\)V$
+^LX/B3I;->A03\(LX/4ib;\)V$
+^LX/B3I;->A00\(\)LX/NGZ;$
+^LX/NPY;->A02\(\)Ljava/util/Map;$
+^LX/B4w;->setUnderlayBitmap\(Landroid/graphics/Bitmap;\)V$
+
+# === v22: Android System Builder 패턴 (범용) ===
+# Root cause: Android 시스템 설정/UI Builder들은 설정값만 전달, 파일 I/O 아님
+# StrictMode, Typeface, PictureInPicture, SurfaceControl, BiometricPrompt 등
+# 이들은 스레드 정책, 폰트 설정, PIP 파라미터, 화면 제어, 생체 인증 설정 등을 빌드
+# 파일 경로가 아닌 정책명, 폰트 패밀리명, 화면 크기, 인증 설정 등만 전달
+^Landroid/os/StrictMode\$ThreadPolicy\$Builder;->build\(\)Landroid/os/StrictMode\$ThreadPolicy;$
+^Landroid/graphics/Typeface\$Builder;->build\(\)Landroid/graphics/Typeface;$
+^Landroid/app/PictureInPictureParams\$Builder;->build\(\)Landroid/app/PictureInPictureParams;$
+^Landroid/view/SurfaceControl\$Builder;->build\(\)Landroid/view/SurfaceControl;$
+^Landroid/hardware/biometrics/BiometricPrompt\$Builder;->build\(\)Landroid/hardware/biometrics/BiometricPrompt;$
+^Landroid/media/audiofx/DynamicsProcessing\$Config\$Builder;->build\(\)Landroid/media/audiofx/DynamicsProcessing\$Config;$
+^Landroid/view/textclassifier/TextClassifier\$EntityConfig\$Builder;->build\(\)Landroid/view/textclassifier/TextClassifier\$EntityConfig;$
+^Landroid/view/textclassifier/TextClassificationContext\$Builder;->build\(\)Landroid/view/textclassifier/TextClassificationContext;$
+^Ljava/util/Locale\$Builder;->build\(\)Ljava/util/Locale;$
+
+# === v22: ContentResolver 추가 메서드 ===
+# Root cause: ContentResolver는 content:// URI 처리, 파일 경로 아님
+# openAssetFileDescriptor는 content URI의 asset을 열지만 실제 파일 시스템 경로 아님
+^Landroid/content/ContentResolver;->openAssetFileDescriptor\(Landroid/net/Uri;Ljava/lang/String;\)Landroid/content/res/AssetFileDescriptor;$
+
+# === v22: Facebook Dextricks/Media 추가 ===
+# Root cause: Facebook 내부 유틸리티, 임시 파일 생성 등
+^Lcom/facebook/common/dextricks/DexStoreUtils;->getVDexFileInDMSize\(Landroid/content/Context;\)Ljava/lang/Long;$
+^Lcom/facebook/mediastreaming/opt/muxer/TempFileCreator;->createTempFile\(Ljava/lang/String;Ljava/lang/String;Z\)Ljava/io/File;$
+
+# === v22: Instagram/Facebook Obfuscated Methods (v21 FP 추가) ===
+# Root cause: v21 FP에서 새로 발견된 Instagram/Facebook 난독화 메서드들
+^LX/OSc;->A00\(LX/IlQ;\)F$
+^LX/OXe;->A07\(J\)V$
+^LX/1zl;-><init>\(LX/0VE;\)V$
+^LX/0Cp;->A01\(Landroid/content/Context;\)Ljava/io/File;$
+^LX/7gj;-><init>\(Landroid/content/Context;\)V$
+^LX/0YP;->A02\(\)LX/3kA;$
+^LX/1jd;->A04\(\)V$
+^LX/1Mf;->A01\(\)Z$
+^Lcom/instagram/zero/device/impl/ZeroDeviceModuleImpl;->A00\(\)Ljava/lang/String;$
+^LX/0XV;->A06\(LX/2yg;\)V$
+^LX/2hL;->A04\(Landroid/content/Context;\)Ljava/io/File;$
+^LX/4rR;->A00\(\)V$
+^LX/1cf;->A00\(LX/1cf;\)V$
+^LX/3hb;->A00\(Ljava/lang/String;\)Ljava/io/ObjectInputStream;$
+^LX/7eS;->A00\(LX/1Hw;\)LX/7xY;$
+^LX/2KE;->A00\(LX/1Hw;\)Landroid/util/Pair;$
+^LX/2ID;->A00\(LX/1Hw;\)Lcom/instagram/common/bloks/payload/BloksComponentQueryResources;$
+^LX/5gL;->A00\(LX/0VS;\)LX/5gL;$
+^LX/8vU;->A00\(LX/9uR;\)Ljava/lang/Object;$
+^LX/LOa;->A01\(\)V$
+^LX/Ly5;->A06\(Ljava/lang/String;\)Z$
+^LX/Dz1;->A0J\(\)V$
+^LX/CBA;->D4m\(\)V$
+^LX/ENl;->A03\(Ljava/util/List;\)V$
+^LX/DzQ;->A0n\(\)Z$
+^LX/CKl;->A0I\(LX/CKl;\)V$
+^LX/APK;->A01\(Ljava/lang/Integer;\)I$
+^LX/Gdk;->A01\(\)LX/AQu;$
+^LX/0l3;->A0e\(LX/0VW;\)Ljava/lang/String;$
+^LX/Gcl;->A00\(\)Ljava/io/File;$
+^LX/0og;->A03\(Landroid/content/Context;\)V$
+^LX/053;->run\(\)V$
+^LX/160;-><init>\(LX/Kwe;\)V$
+^LX/14X;->A03\(Ljava/lang/Throwable;\)V$
+^LX/163;->A00\(Ljava/lang/StringBuilder;\)V$
+^LX/16P;->A00\(\)V$
+^LX/0L7;->run\(\)V$
+^LX/DOM;->A02\(LX/Lex;\)\[Ljava/lang/String;$
+
+# === v23: Android Credentials/Security Builder ===
+# Root cause: Android Credentials API (Android 14+)와 보안 키 생성 Builder
+# CreateCredentialRequest, CredentialOption, KeyPairGeneratorSpec 등은
+# 인증 정보, 자격 증명, 키 쌍 생성 설정을 빌드하지 파일 I/O 아님
+^Landroid/credentials/CreateCredentialRequest\$Builder;->build\(\)Landroid/credentials/CreateCredentialRequest;$
+^Landroid/credentials/CredentialOption\$Builder;->build\(\)Landroid/credentials/CredentialOption;$
+^Landroid/security/KeyPairGeneratorSpec\$Builder;->build\(\)Landroid/security/KeyPairGeneratorSpec;$
+
+# === v23: Chromium Network Stack ===
+# Root cause: Chromium의 네트워크 스택 (Cronet)
+# CronetProvider, CronetEngine은 네트워크 설정을 다루며 파일 I/O 아님
+# getVersion(), Builder 생성자는 버전 정보, 설정 객체만 반환
+^Lorg/chromium/net/CronetProvider;->getVersion\(\)Ljava/lang/String;$
+^Lorg/chromium/net/CronetEngine\$Builder;-><init>\(Lorg/chromium/net/ICronetEngineBuilder;\)V$
+
+# === v23: Google Phenotype (A/B Testing) ===
+# Root cause: Google의 A/B 테스팅 프레임워크
+# ExperimentTokens는 실험 토큰을 다루며 실험 ID, 파라미터만 전달
+^Lcom/google/android/gms/phenotype/ExperimentTokens;->A00\(\[\[B\)Ljava/util/List;$
+
+# === v23: Facebook MSYS 추가 메서드 ===
+# Root cause: MSYS FileManager의 디렉토리 체크
+# isDirectory는 디렉토리 여부를 체크하지만 경로 인자는 변수명/상수인 경우 많음
+^Lcom/facebook/msys/mci/FileManager;->isDirectory\(Ljava/lang/String;\)Z$
+
+# === v23: PrintWriter Object 출력 ===
+# Root cause: PrintWriter::println(Object)는 객체의 toString()을 출력
+# 파일 경로가 아닌 객체 정보, 디버그 메시지만 출력
+^Ljava/io/PrintWriter;->println\(Ljava/lang/Object;\)V$
+
+# === v23: MediaRecorder Output File ===
+# Root cause: MediaRecorder::setOutputFile()은 녹화 출력 파일 경로를 받지만
+# FP에서는 변수명, 임시 경로, 상수가 전달되는 경우가 많음
+# 실제 녹화 경로는 TP에 포함되어 있으므로 이 패턴은 주석 처리
+# ^Landroid/media/MediaRecorder;->setOutputFile\(Ljava/lang/String;\)V$
+
+# === v23: Instagram/Facebook Obfuscated Methods (v22 FP 추가) ===
+# Root cause: v22 FP에서 새로 발견된 Instagram/Facebook 난독화 메서드들
+^LX/LLG;->A00\(Landroid/content/Context;\)LX/EKk;$
+^LX/JkR;->A03\(\)V$
+^LX/6Ju;->A01\(LX/7IF;\)V$
+^LX/6MF;->A01\(LX/6MF;\)V$
+^LX/7FL;->A01\(Ljava/lang/Integer;\)V$
+^LX/1qH;->get\(\)Ljava/lang/Object;$
+^LX/DfQ;->A02\(Landroid/content/Context;\)Ljava/lang/String;$
+^LX/6JN;->A00\(LX/6JN;\)V$
+^LX/167;->A07\(Ljava/lang/String;\)Ljava/io/File;$
+^LX/LNi;->A00\(LX/0bO;\)Landroid/graphics/Bitmap;$
+^LX/2go;->onAppBackgrounded\(\)V$
+^LX/FBR;->invoke\(\)Ljava/lang/Object;$
+^LX/DRP;->A07\(\)V$
+^LX/4U7;->A00\(LX/4U7;\)V$
+^LX/20s;->A01\(\)V$
+^LX/Cda;->A00\(LX/6K0;\)V$
+^Lcom/instagram/base/activity/BaseFragmentActivity;->A0z\(Landroid/os/Bundle;\)V$
+^Lcom/instagram/modal/ModalActivity;->onCreate\(Landroid/os/Bundle;\)V$
+^LX/GvL;->A00\(\)LX/2xx;$
+^LX/Ghw;->A00\(LX/Gni;\)V$
+^LX/8yK;->A0E\(Ljava/lang/String;\)V$
+^LX/Mbk;->invoke\(\)Ljava/lang/Object;$
+^LX/JkR;->A01\(LX/JkR;\)V$
+^LX/Maw;->A00\(\)V$
+^LX/Nqw;->invoke\(\)Ljava/lang/Object;$
+^LX/Gam;->A0E\(Ljava/lang/String;\)V$
+^LX/ItR;->A00\(\)Z$
+^LX/Gam;->A02\(\)Ljava/io/File;$
+^LX/CP0;->A0J\(\)V$
+
+# === v24: Instagram/Facebook Obfuscated Methods (최종 정리) ===
+# Root cause: v23 FP에서 발견된 마지막 Instagram/Facebook 난독화 메서드들
+^LX/LNi;->A01\(Ljava/lang/String;\)Landroid/graphics/Bitmap;$
+^LX/Nsi;->invoke\(Ljava/lang/Object;\)Ljava/lang/Object;$
+^LX/LPl;->A00\(LX/0VS;\)LX/LPl;$
+^LX/40P;->A0D\(\)V$
+^LX/Nrf;->invoke\(\)Ljava/lang/Object;$
+^LX/40P;->A0A\(\)V$
+
+# === v25: Writer write(int) ===
+# Root cause: Writer;->write(I)V는 단일 문자/바이트 값을 출력
+# 파일 경로가 아닌 제어 문자, 구분자, 상태값만 전달
+^Ljava/io/Writer;->write\(I\)V$
+
+# === v25: CookieManager flush ===
+# Root cause: WebView의 CookieManager;->flush()는 쿠키를 디스크에 동기화
+# 내부적으로 쿠키 저장소를 관리하지만, String 인자는 쿠키 이름/값이지 파일 경로 아님
+^Landroid/webkit/CookieManager;->flush\(\)V$
+
+# === v34: Bitmap/이미지 처리 메서드 (범용 패턴) ===
+# 근본 원인: Bitmap을 인자로 받는 메서드는 이미지 처리/변환 작업
+# String 인자는 필터 이름, 처리 옵션, 이벤트명이지 파일 경로 아님
+# 예: "draggableView", "profile_error_message", "is_dark_mode"
+# Instagram/Facebook 난독화: LX/xxx;->A00(Landroid/graphics/Bitmap;)
+;->\w+\(Landroid/graphics/Bitmap;\)
+
+# === v34: Uri$Builder build() (범용 패턴) ===
+# 근본 원인: Uri$Builder는 content:// 또는 http:// URI를 생성
+# String 인자는 scheme, host, path segment, query parameter 등 URI 구성 요소
+# 파일 경로가 아님 (단, file:// URI 예외는 극히 드묾)
+# 예: "www.facebook.com", "utm_campaign", "entry_point", "android.intent.action.VIEW"
+# COMMENTED OUT v35 - TP LOSS: Threads cache/https removed. ^Landroid/net/Uri\$Builder;->build\(\)Landroid/net/Uri;$
+
+# === v34: Instagram 난독화 메서드 - String 반환 헬퍼 (앱별 패턴) ===
+# 근본 원인: LX/xxx;->A0X() 형태의 난독화 메서드 중 인자 없이 String 반환하는 것은
+# 대부분 설정 키, 상태 플래그, 이벤트명 등을 반환하는 헬퍼 메서드
+# String 인자가 아닌 반환값이 추출되므로 파일 경로가 아님
+# 예: "upload_failed_transient", "is_dark_mode", "executing"
+^LX/\w+;->A0[0-9]\(\)Ljava/lang/String;$
+
+# === v34: Instagram 난독화 메서드 - Context+String 반환 (앱별 패턴) ===
+# 근본 원인: LX/xxx;->A0X(Context) 형태는 Context에서 설정/상태를 조회하여 반환
+# 예: "latest_push_token_registration_status", "os_ver", "appVersion"
+^LX/\w+;->A0[0-9]\(Landroid/content/Context;\)Ljava/lang/String;$
+
+# === v34: Instagram 난독화 메서드 - 단일 인자 String 반환 (앱별 패턴) ===
+# 근본 원인: LX/xxx;->A0X(단일 객체) 형태로 변환/매핑 작업 수행
+# 예: "profile_error_message", "login_screen_type", "CREATE_TRUST_BINDING"
+^LX/\w+;->A0[0-9]\(L[^;]+;\)Ljava/lang/String;$
+
+# === v34: StringBuilder 생성/반환 메서드 (범용 패턴) ===
+# 근본 원인: StringBuilder를 생성하거나 String으로 변환하는 메서드는
+# 로그 메시지, 디버그 출력, 에러 메시지 조립에 사용됨
+# String 인자는 메시지 조각, 클래스명, 상수명 등이지 파일 경로 아님
+# 예: "Number of dex files", "kotlin.BooleanArray", "System property"
+# Facebook 난독화: LX/001;->A0n(String)StringBuilder, LX/002;->A0P(StringBuilder)String
+;->A0[a-zA-Z]\(Ljava/lang/String;\)Ljava/lang/StringBuilder;$
+;->A0[a-zA-Z]\(Ljava/lang/StringBuilder;\)Ljava/lang/String;$
+
+# === v34: Fragment Bundle arguments (범용 패턴) ===
+# 근본 원인: Fragment;->requireArguments()와 getArguments()는
+# Fragment에 전달된 Bundle을 반환하며, Bundle.getString()으로 추출된 값은
+# argument 키 이름이지 파일 경로 아님
+# 예: "friendship_status", "target_app", "contact_point_string"
+^Landroidx/fragment/app/Fragment;->requireArguments\(\)Landroid/os/Bundle;$
+^Landroidx/fragment/app/Fragment;->getArguments\(\)Landroid/os/Bundle;$
+
+# === v34: Object 반환 getter (범용 패턴) ===
+# 근본 원인: 인자 없이 Object를 반환하는 메서드는 getter
+# Object에서 toString() 등으로 추출된 값은 객체 상태, 필드명 등이지 파일 경로 아님
+# Facebook 난독화: LX/2KD;->A00()Object
+^LX/\w+;->A00\(\)Ljava/lang/Object;$
+
+# === v34: Facebook 난독화 - 특정 타입 인자 String 반환 (앱별 패턴) ===
+# 근본 원인: LX/4eD;->A03(LX/e3f;) 형태는 특정 객체에서 값을 추출/변환
+# 추출된 값은 키 이름, 파라미터명, 설정 키 등이지 파일 경로 아님
+# 예: "resized_output_file_path", "go_live_target_privacy_text", "image_uri"
+^LX/\w+;->A0[0-9]\(LX/[^;]+;\)Ljava/lang/String;$
+
+# === v34: ImmutableMap copyOf (범용 패턴) ===
+# 근본 원인: ImmutableMap;->copyOf(Map)은 Map을 불변 맵으로 복사
+# Map의 키는 설정 키, 필드명 등이지 파일 경로 아님
+^Lcom/google/common/collect/ImmutableMap;->copyOf\(Ljava/util/Map;\)
+
+
+# === v35: Uri 수정 분기 (Source 기반) ===
+# 근본 원인: Uri;->buildUpon()은 기존 URI 객체를 복사해서 수정하는 분기
+# 주로 Intent URI, Deep Link URI에서 파라미터 추가/삭제하는 로직에서 사용
+# 파일 경로가 아닌 URL 구성 요소 (scheme, host, path, query) 조작
+# 예: content://provider/path → content://provider/path?param=value
+Landroid/net/Uri;->buildUpon\(\)Landroid/net/Uri\$Builder;
+
+# === v35: Intent 처리 분기 (Caller 인자 기반) ===
+# 근본 원인: Caller 메서드 인자에 Intent가 포함되면 Intent 라우팅/처리 로직의 분기
+# Intent에서 action, data, extras 추출하는 흐름에서 생성되는 String은 파일 경로가 아님
+# 예: Intent.getAction() → "android.intent.action.VIEW", Intent.getData() → URI 컴포넌트
+;->\w+\(.*Landroid/content/Intent;.*\)
+
+
+# === v36: 대량 FP 패턴 추가 (빈도 기반) ===
+
+# === Fragment 관련 (범용 패턴) ===
+# 근본 원인: Fragment lifecycle, FragmentManager 접근 메서드는 Fragment 인스턴스/상태 관리
+# 파일 경로와 무관한 UI 컴포넌트 관리
+^Landroidx/fragment/app/Fragment;->getChildFragmentManager\(\)
+^Landroidx/fragment/app/Fragment;->getParentFragmentManager\(\)
+^Landroidx/fragment/app/Fragment;->requireView\(\)Landroid/view/View;$
+^Landroidx/fragment/app/Fragment;->setUserVisibleHint\(Z\)V$
+^Landroidx/fragment/app/Fragment;->getArguments\(\)Landroid/os/Bundle;$
+^LX/0ZC;->A0a\(\)V$
+^LX/0ZC;->A0v\(Z\)V$
+
+# === RecyclerView 관련 (범용 패턴) ===
+# 근본 원인: RecyclerView adapter, layout manager 메서드는 UI 갱신/레이아웃 관련
+# 파일 경로와 무관
+^Landroidx/recyclerview/widget/RecyclerView;->A15\(
+^Landroidx/recyclerview/widget/RecyclerView;->A1C\(
+^Landroidx/recyclerview/widget/RecyclerView;->A0n\(\)Ljava/lang/String;$
+^Landroidx/recyclerview/widget/RecyclerView;->A0m\(Landroid/view/View;\)
+^LX/3TI;->notifyDataSetChanged\(\)V$
+^LX/bCt;->assertNotInLayoutOrScroll\(Ljava/lang/String;\)V$
+^Landroidx/recyclerview/widget/LinearLayoutManager;->setOrientation\(I\)V$
+
+# === Builder 패턴 범용 (Android/Java) ===
+# 근본 원인: xxx$Builder;->build()는 빌더 패턴으로 객체 생성
+# 빌더에 전달된 String은 설정값, 플래그, 파라미터명이지 파일 경로 아님
+^Landroid/os/StrictMode\$VmPolicy\$Builder;->build\(\)
+^Landroid/app/Notification\$.*\$Builder;->build\(\)
+^Landroid/media/AudioTrack\$Builder;->build\(\)
+^Landroid/media/AudioFocusRequest\$Builder;->build\(\)
+^Landroid/view/.*\$Builder;->build\(\)
+^Landroid/bluetooth/le/.*\$Builder;->build\(\)
+^Landroid/media/metrics/.*\$Builder;->build\(\)
+^Landroid/media/RouteDiscoveryPreference\$Builder;->build\(\)
+^Landroid/os/VibrationAttributes\$Builder;->build\(\)
+^Lcom/facebook/.*/\$Builder;->build\(\)
+^LX/3lw;->build\(\)Lcom/google/common/collect/ImmutableCollection;$
+
+# === 난독화 헬퍼 메서드 - 고빈도 패턴 (Facebook) ===
+# 근본 원인: LX/xxx;->AXX 형태의 짧은 메서드는 대부분 헬퍼/유틸리티
+# Fragment에서 추출, Object 변환, Int/String 리턴 등 - 파일 경로 아님
+^LX/\w+;->A0[0-9A-Z]\(Landroidx/fragment/app/Fragment;\)
+^LX/\w+;->A0[0-9A-Z]\(LX/2KD;\)
+^LX/\w+;->A[0-9][0-9A-Z]\(LX/2KD;\)
+^LX/\w+;->A02\(Ljava/lang/Object;\)Ljava/lang/Object;$
+^LX/\w+;->A0C\(\)Ljava/lang/Object;$
+^LX/\w+;->A01\(Ljava/lang/Object;\)V$
+^LX/\w+;->A02\(Ljava/lang/Object;\)V$
+^LX/\w+;->A03\(Ljava/lang/Object;\)V$
+
+# === ImmutableMap/ImmutableList 관련 ===
+# 근본 원인: Guava Immutable collection 생성은 데이터 구조 조작
+# 맵 키/값, 리스트 요소는 설정/상태 데이터이지 파일 경로 아님
+^LX/\w+;->A0Y\(Lcom/google/common/collect/ImmutableMap\$Builder;\)
+^LX/\w+;->A0B\(I\)Lcom/google/common/collect/ImmutableMap;$
+^LX/\w+;->A01\(Ljava/lang/String;\)Lcom/google/common/collect/ImmutableList;$
+^LX/\w+;->A0o\(Ljava/util/Map;\)Lcom/google/common/collect/ImmutableMap;$
+
+# === Activity/Fragment lifecycle ===
+# 근본 원인: onCreate, onSaveInstanceState 등 lifecycle 메서드는 컴포넌트 상태 관리
+# Bundle에 저장되는 String은 상태 키/값이지 파일 경로 아님
+;->onCreate\(Landroid/os/Bundle;\)V$
+;->onSaveInstanceState\(Landroid/os/Bundle;\)V$
+
+# === Exception/Error 처리 ===
+# 근본 원인: Exception 생성/전파는 에러 처리 흐름
+# 에러 메시지, 스택트레이스는 파일 경로 아님
+^Lcom/facebook/fbservice/service/ServiceException;->A00\(Ljava/lang/Throwable;\)
+;->A01\(Ljava/lang/Exception;\)V$
+;->onError\(Ljava/lang/Throwable;\)V$
+
+# === Context helper (추가) ===
+# 근본 원인: Context에서 Resources, LayoutInflater 등 추출하는 헬퍼
+# 리소스 ID, 레이아웃명은 파일 경로 아님
+^LX/\w+;->A0E\(Landroidx/fragment/app/Fragment;\)Landroid/content/res/Resources;$
+^LX/\w+;->A08\(Landroid/content/Context;\)
+^LX/\w+;->A03\(Landroid/content/Context;\)
+
+# === Object 반환 메서드 확장 ===
+# 근본 원인: Object 반환 메서드는 generic getter/converter
+# 파일 경로는 File 타입이지 Object 타입 아님
+# COMMENTED OUT v37 - TP LOSS: Facebook cache/data. ^LX/\w+;->A0[0-9]\(\)Ljava/lang/Object;$
+
+# === ThreadKey/UserSession 관련 (Facebook/Instagram) ===
+# 근본 원인: 메시징/세션 식별자는 스레드 ID, 사용자 ID 등
+# 파일 경로가 아님
+^Lcom/facebook/messaging/model/threadkey/ThreadKey;->A0X\(\)Ljava/lang/String;$
+^LX/\w+;->\(Lcom/facebook/auth/usersession/FbUserSession;\)V$
+^LX/\w+;-><init>\(Lcom/facebook/auth/usersession/FbUserSession;\)V$
+
+# === Parcel/Serialization ===
+# 근본 원인: Parcel write는 직렬화 메서드
+# Parcelable 객체 필드는 상태 데이터이지 파일 경로 아님
+;->writeToParcel\(Landroid/os/Parcel;I\)V$
+^LX/\w+;->A01\(Landroid/os/Parcel;\)
+
+# === Video/Media params ===
+# 근본 원인: 비디오/미디어 파라미터 객체 생성
+# 파라미터는 재생 설정, URL, 메타데이터이지 로컬 파일 경로 아님
+^Lcom/facebook/video/engine/api/VideoPlayerParams;-><init>\(
+^Lcom/facebook/ui/media/attachments/model/MediaResource;-><init>\(
+
+# === Coroutine/Async ===
+# 근본 원인: Kotlin coroutine invokeSuspend는 비동기 실행 흐름
+# suspend 함수 내부 String은 비즈니스 로직 데이터이지 파일 경로 아님
+;->invokeSuspend\(Ljava/lang/Object;\)Ljava/lang/Object;$
+
+# === SQLite database ===
+# 근본 원인: getWritableDatabase는 DB 핸들 획득
+# DB 파일은 openOrCreateDatabase에서 이미 처리됨, 이후 작업은 쿼리/트랜잭션
+# (openOrCreateDatabase는 유지 - 실제 DB 파일 경로)
+^Landroid/database/sqlite/SQLiteOpenHelper;->getWritableDatabase\(\)
+
+# === LithoView 관련 (Facebook UI) ===
+# 근본 원인: Litho는 Facebook의 선언적 UI 프레임워크
+# LithoView 생성/조작은 UI 렌더링이지 파일 IO 아님
+^LX/\w+;->A08\(Landroid/content/Context;\)Lcom/facebook/litho/LithoView;$
+^LX/\w+;->A0b\(Landroidx/fragment/app/Fragment;\)Lcom/facebook/litho/LithoView;$
+
+# === Preference 관련 ===
+# 근본 원인: Preference/PreferenceGroup은 설정 UI 관리
+# Preference key/value는 설정 항목이지 파일 경로 아님
+^Landroidx/preference/PreferenceGroup;->A0O\(Landroidx/preference/Preference;\)V$
+
+# === GraphQL/Pando (Facebook) ===
+# 근본 원인: GraphQL query builder, Pando tree deserialization
+# GraphQL 필드명, JSON 경로는 파일 경로 아님
+;->build\(\)LX/0WR;$
+;->build\(\)Lcom/facebook/pando/PandoGraphQLRequest;$
+^LX/\w+;->A01\(Landroid/os/Parcel;\)Lcom/facebook/graphservice/interfaces/Tree;$
+
+# === Writer/Print 관련 ===
+# 근본 원인: Writer/PrintWriter는 출력 스트림에 쓰기
+# print/write 인자는 출력 내용이지 파일 경로 아님 (파일 경로는 constructor에서 처리)
+^Ljava/io/PrintWriter;->print\(
+^Ljava/io/Writer;->write\(Ljava/lang/String;II\)V$
+
+# === Interstitial/Trigger (Facebook) ===
+# 근본 원인: Interstitial trigger context는 광고/알림 트리거 조건
+# 트리거 파라미터는 이벤트명, 조건이지 파일 경로 아님
+^Lcom/facebook/interstitial/triggers/InterstitialTriggerContext;-><init>\(Ljava/util/Map;\)V$
+
+# === TypeToken/Gson ===
+# 근본 원인: Gson TypeToken, JsonReader는 JSON deserialization
+# JSON 필드명, 타입명은 파일 경로 아님
+^Lcom/google/gson/reflect/TypeToken;-><init>\(Ljava/lang/reflect/Type;\)V$
+^Lcom/google/gson/stream/JsonReader;->A0H\(\)D$
+^Lcom/fasterxml/jackson/databind/deser/std/StdDeserializer;->A0z\(
+
+# === MediaRecorder (예외 주의) ===
+# 근본 원인: setOutputFile(FileDescriptor)는 이미 열린 FD 사용
+# FD는 파일 경로가 아닌 핸들 - 파일 경로는 open 시점에 처리됨
+^Landroid/media/MediaRecorder;->setOutputFile\(Ljava/io/FileDescriptor;\)V$
+
+# === Chromium/WebView ===
+# 근본 원인: Chromium upload data provider는 HTTP body 데이터
+# 업로드 데이터는 파일 경로 아님
+^Lorg/chromium/net/UploadDataProviders;->create\(
+
+# === RealtimeClient (Instagram) ===
+# 근본 원인: RealtimeClient는 WebSocket 실시간 통신 상태
+# MQTT state, region hint는 네트워크 설정이지 파일 경로 아님
+^Lcom/instagram/realtimeclient/RealtimeClientManager;->getMqttTargetState\(\)I$
+;->A08\(\)LX/6Tk;$
+
+# === 짧은 void 메서드 - 상태 변경 ===
+# 근본 원인: A00()V, A01()V 같은 짧은 void 메서드는 상태 플래그 설정/리셋
+# 파일 IO 없이 상태만 변경
+^LX/\w+;->A00\(\)V$
+^LX/\w+;->A01\(\)V$
+^LX/\w+;->A02\(\)V$
+^LX/\w+;->CL3\(\)V$
+^LX/\w+;->A0A\(\)V$
+^LX/\w+;->A0V\(\)V$
+
+# === 난독화 메서드 - 특정 타입 반환 ===
+# 근본 원인: 특정 내부 타입 반환하는 난독화 메서드는 객체 변환/생성
+# 예: A02()LX/Max;, A00()LX/504; 등
+^LX/\w+;->A[0-9]{2}\(\)LX/\w+;$
+^LX/\w+;->A[0-9]{2}\(Ljava/lang/String;\)LX/\w+;$
+
+# === 난독화 메서드 - 프리미티브/리스트 반환 ===
+# 근본 원인: Float, Double, Int 반환은 숫자 계산/변환
+# List 반환은 컬렉션 조작 - 파일 경로 아님
+^LX/\w+;->A12\(\)F$
+^LX/\w+;->A10\(\)D$
+^LX/\w+;->A03\(LX/2KD;\)I$
+^LX/\w+;->A1F\(LX/2KD;\)Ljava/util/List;$
+
+# === 난독화 메서드 - String 배열/Object 배열 반환 ===
+# 근본 원인: 배열 반환은 bulk 데이터 조회/변환
+# 배열 요소는 설정 리스트, 상태 목록이지 파일 경로 아님
+^LX/\w+;->A1b\(LX/2KD;\)\[Ljava/lang/Object;$
+^LX/\w+;->A00\(\[Ljava/lang/Object;\)Ljava/lang/String;$
+
+
+# === v37: Caller 기반 - Coroutine FP 제거 (A0C()Object 대체) ===
+# 근본 원인: Kotlin Coroutine suspend function (LX/0SM = Continuation 인자)
+# LX/0SM만 받는 메서드는 GraphQL mutation, 네트워크 작업 ID 등 반환 - FP
+# 예외: List + LX/0SM 조합은 여러 파일 처리 - TP 가능성
+# 예: DeleteMEmuProfile, FETCH_OTID_START (FP) vs cache/data (TP)
+
+# Coroutine - LX/0SM만 단독 인자
+;->\w+\(LX/0SM;\)Ljava/lang/Object;$
+
+# Coroutine - LX/0SM + primitive (boolean, int, long)
+;->\w+\(LX/0SM;[ZBIJ]\)Ljava/lang/Object;$
+;->\w+\(Z?LX/0SM;\)Ljava/lang/Object;$
+
+# Coroutine - String + LX/0SM (작업 ID, mutation 이름)
+;->\w+\(Ljava/lang/String;LX/0SM;\)Ljava/lang/Object;$
+
+# Coroutine - Context + String + LX/0SM (네트워크 서비스)
+;->\w+\(Landroid/content/Context;Ljava/lang/String;LX/0SM;
+;->\w+\(Lcom/facebook/auth/usersession/FbUserSession;.*LX/0SM;\)Ljava/lang/Object;$
+
+# Coroutine - 자기 참조 + LX/0SM (재귀적 suspend)
+;->\w+\(LX/\w+;LX/0SM;
+;->\w+\(LX/\w+;.*LX/0SM;.*\)Ljava/lang/Object;$
+
+# Kotlin Function0/Function1 + LX/0SM (lambda 콜백)
+;->\w+\(LX/0SM;Lkotlin/jvm/functions/Function
+;->\w+\(.*Lkotlin/jvm/functions/Function.*;LX/0SM;\)
+
+# Repository/Service suspend 메서드 (명시적 클래스명)
+^Lcom/.*Repository;->.*\(.*LX/0SM;\)Ljava/lang/Object;$
+^Lcom/.*Service;->.*\(.*LX/0SM;\)Ljava/lang/Object;$
+^Lcom/.*Controller;->.*\(.*LX/0SM;\)Ljava/lang/Object;$
+
+
+# === v38: 대량 FP 패턴 추가 2차 (Facebook 고빈도 Sink 기반) ===
+
+# === StringBuilder 조작 (범용) ===
+# 근본 원인: StringBuilder append/toString은 문자열 연결 - 로그, 메시지 조립
+^LX/001;->A1J\(Ljava/lang/StringBuilder;\)V$
+^LX/002;->A0S\(Ljava/lang/Object;\)Ljava/lang/StringBuilder;$
+^LX/e3F;->A1O\(Ljava/lang/StringBuilder;\)V$
+^LX/IV2;->A1Z\(Ljava/lang/StringBuilder;\)V$
+^LX/g1a;->A00\(LX/g1a;\)Ljava/lang/StringBuilder;$
+
+# === 단순 String 처리 메서드 (범용) ===
+# 근본 원인: A04(String), A02(String) 같은 단일 String 인자 메서드는 변환/검증
+^LX/g4w;->A04\(Ljava/lang/String;\)V$
+^LX/9ol;->A04\(Ljava/lang/String;\)V$
+^LX/6ph;->A02\(Ljava/lang/String;\)V$
+^LX/6z7;->A03\(Ljava/lang/String;\)V$
+^LX/B50;->A00\(Ljava/lang/String;\)V$
+^LX/2KC;->A00\(Ljava/lang/String;\)V$
+^LX/Lux;->A02\(Ljava/lang/String;\)V$
+
+# === 단순 int/long 처리 메서드 (범용) ===
+# 근본 원인: A0N(I), A0J(I) 같은 int 인자 메서드는 인덱스/ID 처리
+^LX/\w+;->A0[A-Z]\(I\)V$
+^LX/\w+;->A0[A-Z]\(I\)I$
+^LX/\w+;->A0[A-Z]\(I\)Ljava/lang/String;$
+^LX/\w+;->A[0-9]{2}\(J\)Ljava/lang/String;$
+^LX/\w+;->A[0-9]{2}\(I\)Ljava/lang/String;$
+
+# === 단순 boolean 처리 메서드 (범용) ===
+# 근본 원인: A03(Z), A06(Z) 같은 boolean 인자는 플래그 설정
+^LX/\w+;->A0[0-9]\(Z\)V$
+^LX/\w+;->A[0-9]{2}\(Z\)V$
+
+# === Getter - 내부 타입 반환 (범용) ===
+# 근본 원인: A0O()LX/Max, A0B()LX/aJ1 같은 내부 타입 getter
+^LX/\w+;->A0[A-Z]\(\)LX/\w+;$
+^LX/\w+;->A[0-9][A-Z]\(\)LX/\w+;$
+
+# === Context만 받는 생성자 (범용) ===
+# 근본 원인: <init>(Context)는 UI 컴포넌트/서비스 초기화
+^LX/\w+;-><init>\(Landroid/content/Context;\)V$
+;-><init>\(Landroid/content/Context;\)V$
+
+# === 콜백 메서드 (범용) ===
+# 근본 원인: onSuccess, invoke, scrollToTop 등 이벤트 핸들러
+;->onSuccess\(Ljava/lang/Object;\)V$
+;->invoke\(Ljava/lang/Object;\)Ljava/lang/Object;$
+;->scrollToTop\(\)V$
+;->onPause\(\)V$
+
+# === UI 관련 단순 void 메서드 (범용) ===
+# 근본 원인: A0K(), A0q(), A0V() 같은 짧은 void 메서드는 상태 변경
+^LX/\w+;->A0[A-Z]\(\)V$
+^LX/\w+;->A0[a-z]\(\)V$
+
+# === Map/Collection 처리 (범용) ===
+# 근본 원인: Map, ImmutableMap 생성/변환은 설정 데이터 조작
+^LX/\w+;->A01\(Ljava/util/Map;\)Lcom/google/common/collect/ImmutableMap;$
+^LX/\w+;->A01\(\)Lcom/google/common/collect/ImmutableMultimap;$
+^LX/\w+;->A09\(\)Ljava/util/List;$
+
+# === Object 인자 단일 처리 (범용) ===
+# 근본 원인: A0q(Object), A06(Object) 같은 Object 인자는 generic 처리
+^LX/\w+;->A0[a-z]\(Ljava/lang/Object;\)V$
+^LX/\w+;->A[0-9]{2}\(Ljava/lang/Object;\)V$
+
+# === String 변환 getter (범용) ===
+# 근본 원인: A0w(LX/2KD;)String, A0v(String)String 같은 변환 메서드
+^LX/\w+;->A0[a-z]\(LX/\w+;\)Ljava/lang/String;$
+^LX/\w+;->A0[a-z]\(Ljava/lang/String;\)Ljava/lang/String;$
+^LX/\w+;->A[0-9]{2}\(LX/\w+;\)Ljava/lang/String;$
+
+# === 내부 객체 getter - 인자 있음 (범용) ===
+# 근본 원인: A00(Object)Object, A05(...)LX/xxx 같은 객체 변환
+^LX/\w+;->A00\(Ljava/lang/Object;\)Ljava/lang/Object;$
+# COMMENTED OUT v39 - TP LOSS: Thread cache/data. ^LX/\w+;->A0[0-9]\(LX/\w+;\)LX/\w+;$
+
+# === DialogFragment/Fragment lifecycle ===
+# 근본 원인: A0T(Bundle)Dialog, A08()Fragment 같은 Fragment 메서드
+^LX/0Yq;->A0[A-Z]\(.*\)Landroid/app/Dialog;$
+;->A08\(\)Landroidx/fragment/app/Fragment;$
+
+# === BrowserLite 관련 (Facebook) ===
+# 근본 원인: BrowserLiteFragment는 WebView wrapper - 브라우저 상태 관리
+^Lcom/facebook/browser/lite/BrowserLiteFragment;->A0f\(\)
+^Lcom/facebook/browser/lite/BrowserLiteFragment;->getIntent\(\)
+^Lcom/facebook/browser/lite/BrowserLiteFragment;->Dh6\(I\)V$
+^LX/bHQ;->A03\(Lcom/facebook/browser/lite/BrowserLiteFragment;\)
+^LX/bCb;->A0x\(Lcom/facebook/browser/lite/BrowserLiteFragment;\)
+
+# === Phone number validation ===
+# 근본 원인: PhoneNumberUtil은 전화번호 검증 - 전화번호 문자열이지 파일 경로 아님
+^Lcom/facebook/phonenumbers/PhoneNumberUtil;->isValidNumber\(
+^Lcom/facebook/phonenumbers/PhoneNumberUtil;->getNationalSignificantNumber\(
+
+# === Gson/Jackson ===
+# 근본 원인: JSON serialization/deserialization
+^Lcom/google/gson/stream/JsonReader;->A0[A-Z]\(\)
+^Lcom/google/gson/stream/JsonWriter;->A0[A-Z]\(
+^Lkotlinx/serialization/json/JsonPrimitive;-
+
+# === GraphService ===
+# 근본 원인: GraphService asset은 GraphQL schema 리소스
+^Lcom/facebook/graphservice/asset/GraphServiceAsset;->getInstance\(Ljava/lang/String;\)
+
+# === RecyclerView adapter ===
+# 근본 원인: RecyclerView adapter 메서드는 UI 갱신
+^Landroidx/recyclerview/widget/RecyclerView;->A1[0-9A-Z]\(
+^LX/bCt;->A0[a-z]\(
+^LX/bD3;->A0[A-Z]\(LX/2pX;\)V$
+
+# === DrawerLayout ===
+# 근본 원인: DrawerLayout은 슬라이딩 메뉴 - UI 상태
+^Landroidx/drawerlayout/widget/DrawerLayout;->A09\(Landroid/view/View;\)I$
+
+# === ContentResolver update ===
+# 근본 원인: ContentResolver update는 ContentProvider 데이터 변경 - URI는 content:// scheme
+^Landroid/content/ContentResolver;->update\(Landroid/net/Uri;
+
+# === WebRTC/Audio ===
+# 근본 원인: WebRTC audio logging은 디버그 메시지
+^Lorg/webrtc/voiceengine/WebRtcAudioUtils;->logAudioState\(Ljava/lang/String;\)V$
+
+# === React Native ===
+# 근본 원인: React Native ViewManager는 컴포넌트 관리
+^LX/8kD;->A00\(Ljava/lang/String;\)Lcom/facebook/react/uimanager/ViewManager;$
+
+# === Mapbox ===
+# 근본 원인: Mapbox camera position은 지도 뷰 설정
+^Lcom/mapbox/mapboxsdk/camera/CameraPosition\$Builder;->build\(\)
+
+# === 특정 고빈도 난독화 메서드 (Facebook) ===
+^LX/54p;->A3T\(LX/2qw;\)V$
+^LX/TYT;->A0N\(I\)V$
+^LX/Fyp;->A1R\(Landroidx/fragment/app/Fragment;\)V$
+^LX/9Oy;->A0t\(LX/2KD;\)Ljava/lang/Object;$
+^LX/IUu;->A0x\(LX/2KD;\)Ljava/lang/String;$
+^LX/e3f;->A1W\(\)Ljava/lang/String;$
+^LX/1RT;->A03\(LX/1RT;\)V$
+^LX/IkB;->A01\(LX/IkC;\)V$
+^LX/IfD;->A0q\(Ljava/lang/Object;\)V$
+^LX/ATn;->A00\(LX/2Jg;\)LX/5Ok;$
+^LX/IV9;->A1f\(LX/54p;\)V$
+^LX/bOL;->A0b\(Ljava/lang/String;\)Ljava/lang/String;$
+^LX/Cv7;->A05\(LX/Css;\)LX/Cuj;$
+^LX/9Ox;->A03\(Lcom/facebook/messaging/model/threadkey/ThreadKey;\)I$
+^LX/Q5p;->A0v\(LX/4dk;\)Lcom/facebook/video/engine/api/VideoPlayerParams;$
+^LX/IUx;->A1Q\(LX/XFT;\)V$
+^LX/hMN;->A0M\(LX/j0d;\)V$
+^LX/e9Z;-><init>\(LX/eA7;\)V$
+^LX/3UB;->A3P\(\)LX/3Qc;$
+^LX/4HB;->A0v\(Ljava/lang/String;\)Ljava/lang/String;$
+^LX/XFE;->A0w\(LX/2KD;\)Ljava/lang/String;$
+^LX/e6v;->A0D\(LX/e6w;\)I$
+^LX/g1g;->A07\(LX/fD2;\)V$
+^LX/5TM;->A1V\(LX/504;\)V$
+^LX/IV1;->A0k\(Landroidx/fragment/app/Fragment;\)LX/2kb;$
+^LX/bOL;-><init>\(Ljava/lang/String;\)V$
+^LX/5ZX;->A0B\(\)Ljava/lang/String;$
+^LX/1Uu;->A06\(Z\)V$
+^LX/IV2;->A0j\(Landroidx/fragment/app/Fragment;\)LX/9Xv;$
+^LX/IV3;->A0j\(Landroidx/fragment/app/Fragment;\)Ljava/lang/String;$
+^LX/Mja;->A0d\(LX/Q4U;\)V$
+^LX/06G;->A00\(LX/06G;\)V$
+^LX/0a7;->A08\(LX/0a2;\)V$
+^LX/Taz;->A0K\(\)V$
+^LX/Cfa;->A0w\(LX/18b;\)Ljava/lang/String;$
+^LX/TYV;->onSuccess\(Ljava/lang/Object;\)V$
+^LX/2K8;->A05\(I\)LX/4AK;$
+^LX/Cfb;->A0c\(Landroidx/fragment/app/Fragment;\)Lcom/facebook/mig/scheme/interfaces/MigColorScheme;$
+^LX/eEx;->A08\(LX/MuZ;\)V$
+^LX/D1H;->A00\(Lcom/facebook/xapp/messaging/threadview/loader/mailbox/datasource/key/MailboxThreadSourceKey;\)LX/D6i;$
+
+
+# === v40: FP-only fb_storage_auto Caller IDs (cross-validated on Facebook, Thread, NaverCafe) ===
+# 근본 원인: META-STORAGE-AUTO 합성 경로 중 ADB에서 트리거되지 않는 내부 디렉토리들
+# 논리적 근거: 세 앱 모두에서 FP로만 나타나며, 동일 Source(<fb_storage_auto>) + Sink(<synthetic_sink>)이지만 Caller ID로 TP/FP 구분 가능
+# 검증: Facebook(9 FP 제거), Thread(9 FP 제거), NaverCafe(8 FP 제거) - TP 손실 없음
+
+# app_secure_shared
+;-><synthetic_fb_storage_157877869>\(
+
+# app_optsvc_analytics
+;-><synthetic_fb_storage_345253467>\(
+
+# app_browser_proc_webview
+;-><synthetic_fb_storage_372754419>\(
+
+# app_modules (일부 케이스)
+;-><synthetic_fb_storage_917883976>\(
+
+# app_developer/resources
+;-><synthetic_fb_storage_1080615614>\(
+
+# app_analytics_beacon
+;-><synthetic_fb_storage_1262619000>\(
+
+# app_acra-reports
+;-><synthetic_fb_storage_1824693925>\(
+
+# app_fb-forker-tmp
+;-><synthetic_fb_storage_2101388817>\(
