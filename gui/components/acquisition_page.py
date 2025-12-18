@@ -6,7 +6,8 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QLineEdit, QTextEdit, QFileDialog, QProgressBar, QMessageBox,
-    QListWidget, QListWidgetItem, QTabWidget, QToolButton, QSizePolicy, QListWidgetItem
+    QListWidget, QListWidgetItem, QTabWidget, QToolButton, QSizePolicy, QListWidgetItem,
+    QTextBrowser 
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QSize
 from PyQt5.QtGui import QPixmap,QIcon
@@ -23,7 +24,7 @@ runner_scripts_dir = current_file.parent.parent.parent / "Logic" / "runner_scrip
 if str(runner_scripts_dir) not in sys.path:
     sys.path.insert(0, str(runner_scripts_dir))
 
-BOTTOM_SECTION_HEIGHT = 680  # 
+BOTTOM_SECTION_HEIGHT = 680  # <- 여기만 바꿔서 하단 세로 조절
 
 
 class AnalysisThread(QThread):
@@ -120,7 +121,7 @@ class AnalysisThread(QThread):
             })
             
         except Exception as e:
-            # 에러도 progress_update로 보내기
+            # ✅ 에러도 progress_update로 보내기
             self.progress_update.emit(f"\n[ERROR] 오류 발생: {str(e)}")
             self.analysis_error.emit(f"오류 발생: {str(e)}")
     
@@ -237,61 +238,61 @@ class AnalysisThread(QThread):
             return None
 
     
-    def run_command(self, cmd, expected_output):
-        """명령어 실행 및 출력 모니터링"""
-        self.progress_update.emit(f"\n[+] 실행: {cmd}")
-        
+    def run_command(self, cmd, stage_name=None):
+        import subprocess, os
+
+        # ✅ Windows: 콘솔 창 숨김 옵션
+        startupinfo = None
+        creationflags = 0
+        if os.name == "nt":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
+            creationflags = subprocess.CREATE_NO_WINDOW
+
+        popen_kwargs = dict(
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            universal_newlines=True,
+            encoding="utf-8",
+            errors="ignore",
+            startupinfo=startupinfo,
+            creationflags=creationflags,
+        )
+
         try:
-            # Windows 환경변수 설정
-            env = os.environ.copy()
-            env['PYTHONIOENCODING'] = 'utf-8'
-            
-            process = subprocess.Popen(
-                cmd,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=1,
-                env=env  #  환경변수 추가
-            )
-            
-            # 실시간 출력 읽기
-            for line in iter(process.stdout.readline, b''):
-                if not self.is_running:
-                    process.terminate()
-                    return None
-                
-                # 안전한 디코딩
-                try:
-                    decoded_line = line.decode('utf-8', errors='replace').strip()
-                except:
-                    try:
-                        decoded_line = line.decode('cp949', errors='replace').strip()
-                    except:
-                        decoded_line = line.decode('ascii', errors='ignore').strip()
-                
+            # ✅ cmd는 리스트 권장 (예: ["adb","pull",src,dst])
+            process = subprocess.Popen(cmd, shell=False, **popen_kwargs)
+
+            for line in process.stdout:
+                decoded_line = line.rstrip()
                 if decoded_line:
-                    # 특수 문자 제거
-                    safe_line = ''.join(char for char in decoded_line if ord(char) < 128 or char.isalnum() or char in ' [](){}=-+*/.,!?@#$%^&*_~`\'":|\\/')
-                    if safe_line:
-                        self.progress_update.emit(safe_line)
-            
+                    # 스레드/클래스에 log_update가 있으면 사용
+                    if hasattr(self, "log_update"):
+                        # log_update 시그니처가 (msg, type)면 맞춰서 호출
+                        try:
+                            self.log_update.emit(decoded_line, "INFO")
+                        except TypeError:
+                            self.log_update.emit(decoded_line)
+                    else:
+                        print(decoded_line)
+
             process.wait()
-            
-            if process.returncode != 0:
-                self.progress_update.emit(f"[ERROR] 명령어 실행 실패 (exit code: {process.returncode})")
-                return None
-            
-            # 결과 파일 확인
-            if os.path.exists(expected_output):
-                return expected_output
-            else:
-                self.progress_update.emit(f"[ERROR] 결과 파일을 찾을 수 없습니다: {expected_output}")
-                return None
-                
+            return process.returncode
+
         except Exception as e:
-            self.progress_update.emit(f"[ERROR] 명령 실행 중 오류: {str(e)}")
-            return None
+            err = f"[!] run_command 실패: {e}"
+            if hasattr(self, "log_update"):
+                try:
+                    self.log_update.emit(err, "ERROR")
+                except TypeError:
+                    self.log_update.emit(err)
+            else:
+                print(err)
+            return -1
+
+
     
     def stop(self):
         """분석 중지"""
@@ -384,7 +385,7 @@ class APKExtractionThread(QThread):
                     return
                 
                 # 출력 파일명
-                # 파일명 결정
+                # ✅ 파일명 결정
                 # 파일명 결정
                 apk_filename = os.path.basename(apk_path)
 
@@ -397,7 +398,7 @@ class APKExtractionThread(QThread):
 
                 output_file = os.path.join(package_folder, apk_filename)
 
-                # 수정: 크기를 미리 구하기
+                # ✅ 수정: 크기를 미리 구하기
                 try:
                     size_result = subprocess.run(
                         ['adb', 'shell', 'stat', '-c', '%s', apk_path],
@@ -417,10 +418,10 @@ class APKExtractionThread(QThread):
                 self.status_update.emit(f"다운로드 중... ({i+1}/{total_files}): {apk_filename}")
                 print(f"[+] 다운로드: {apk_filename}")
 
-                # 목표 진행률 설정
+                # ✅ 목표 진행률 설정
                 self.target_progress = int(((i + 1) / total_files) * 100)
 
-                # 부드러운 진행률 시작
+                # ✅ 부드러운 진행률 시작
                 import threading
                 smooth_progress_thread = threading.Thread(target=self._smooth_progress_update, daemon=True)
                 smooth_progress_thread.start()
@@ -450,7 +451,7 @@ class APKExtractionThread(QThread):
 
                 process.wait()
 
-                # 목표 진행률 도달 (완료)
+                # ✅ 목표 진행률 도달 (완료)
                 self.current_progress = self.target_progress
                 self.progress_update.emit(self.current_progress)
 
@@ -525,7 +526,7 @@ class APKExtractionThread(QThread):
             return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
-    # 여기에 추가!
+    # ✅ 여기에 추가!
     def _smooth_progress_update(self):
         """부드러운 진행률 업데이트 (타이머 기반)"""
         import time
@@ -557,7 +558,7 @@ class AcquisitionPage(QWidget):
         self.analysis_thread = None
         self.selected_package = None
         
-        # 분석 중 플래그 추가
+        # ✅ 분석 중 플래그 추가
         self.is_analyzing = False
 
         #  디버그: 초기 case_folder 확인
@@ -806,7 +807,7 @@ class AcquisitionPage(QWidget):
         """페이지 표시 시 즉시 연결 확인 + 15초 대기 + 5초마다 재확인"""
         super().showEvent(event)
 
-        # 분석 진행 중이면 showEvent 무시
+        # ✅ 분석 진행 중이면 showEvent 무시
         if self.is_analyzing:
             print("[+] 분석 진행 중 - showEvent 무시")
             return
@@ -868,7 +869,7 @@ class AcquisitionPage(QWidget):
         # UI 초기화
         self.progress_label.setText("0.00 %")
         self.acquisition_progress.setValue(0)
-        # 추가: current_progress도 0으로 초기화
+        # ✅ 추가: current_progress도 0으로 초기화
         if hasattr(self, 'extraction_thread'):
             # 기존 스레드가 있으면 정지
             if self.extraction_thread.isRunning():
@@ -936,7 +937,7 @@ class AcquisitionPage(QWidget):
         self.progress_label.setText("0.00 %")
         self.acquisition_progress.setValue(0)
 
-        # 추가: 시간/크기 정보도 초기화
+        # ✅ 추가: 시간/크기 정보도 초기화
         if hasattr(self, 'result_time_label'):
             self.result_time_label.setText("결과 시간 : 00:00:00")
         
@@ -1556,7 +1557,7 @@ class AcquisitionPage(QWidget):
         tab_layout.setContentsMargins(0, 6, 0, 0)
         tab_layout.setSpacing(0)
 
-        # 로그 탭 하나만!
+        # ✅ 로그 탭 하나만!
         self.btn_final_log = QPushButton("로그")
         self.btn_final_log.setCheckable(True)
         self.btn_final_log.setChecked(True)  # 기본 선택
@@ -1588,7 +1589,7 @@ class AcquisitionPage(QWidget):
         log_layout.setContentsMargins(0, 0, 0, 0)
         log_layout.setSpacing(0)
 
-        # 로그 위젯 (흰색 배경)
+        # ✅ 로그 위젯 (흰색 배경)
         self.final_log_view = QTextEdit()
         self.final_log_view.setReadOnly(True)
         self.final_log_view.setStyleSheet("""
@@ -1635,10 +1636,10 @@ class AcquisitionPage(QWidget):
 
     def start_analysis(self):
         """자동 분석 시작"""
-        # 분석 중 플래그 설정 (맨 위로!)
+        # ✅ 분석 중 플래그 설정 (맨 위로!)
         self.is_analyzing = True
         
-        # 모든 타이머 중지
+        # ✅ 모든 타이머 중지
         if hasattr(self, 'connection_timer') and self.connection_timer.isActive():
             self.connection_timer.stop()
             print("[+] 연결 체크 타이머 중지")
@@ -1647,7 +1648,7 @@ class AcquisitionPage(QWidget):
             self.initial_check_timer.stop()
             print("[+] 15초 타이머 중지")
         
-        # 메인 윈도우 백그라운드 타이머도 중지
+        # ✅ 메인 윈도우 백그라운드 타이머도 중지
         main_window = self.window()
         if hasattr(main_window, 'background_connection_timer') and main_window.background_connection_timer.isActive():
             main_window.background_connection_timer.stop()
@@ -1683,11 +1684,16 @@ class AcquisitionPage(QWidget):
         # 5. 메인 윈도우 찾기
         main_window = self.window()
         
-        # 탐색기로 먼저 전환
-        if hasattr(main_window, 'show_explorer_page'):
+        # ✅ 로딩을 먼저 띄워서 "즉시 작동" 체감시키기
+        if hasattr(main_window, "show_loading"):
+            main_window.show_loading(mode="analysis")
+            print("[+] 로딩 화면 표시 (analysis)")
+
+        # ✅ 그 다음 탐색기로 전환 (오버레이는 전역이라 그대로 유지됨)
+        if hasattr(main_window, "show_explorer_page"):
             main_window.show_explorer_page()
             print("[+] 탐색기 탭으로 전환")
-        
+                
         # 7. 탐색기에 로딩 상태 표시
         if hasattr(main_window, 'explorer_content'):
             explorer = main_window.explorer_content
@@ -1743,15 +1749,10 @@ class AcquisitionPage(QWidget):
                     elif "스코어링 완료" in message or "[OK] 스코어링" in message:
                         child.setText("스코어링 완료!")
                     break
-        
-        # 2. 콘솔 출력만!
-        print(message)
-
-        main_window = self.window()
-        if hasattr(main_window, "explorer_content"):
-            explorer = main_window.explorer_content
-            if hasattr(explorer, "append_loading_log"):
-                explorer.append_loading_log(message)
+        # 2) 전역 오버레이 로그로 누적
+        print(message)  # 콘솔 출력은 유지해도 되고, 싫으면 삭제
+        if hasattr(main_window, "append_overlay_log"):
+            main_window.append_overlay_log(message)
 
     
     def stop_analysis(self):
@@ -1773,13 +1774,13 @@ class AcquisitionPage(QWidget):
         """분석 완료 처리"""
         print("\n[+] === 분석 완료 ===")
         
-        # 분석 중 플래그 해제
+        # ✅ 분석 중 플래그 해제
         self.is_analyzing = False
         
         # 메인 윈도우 찾기
         main_window = self.window()
         
-        # 타이머 재시작 (5초 후)
+        # ✅ 타이머 재시작 (5초 후)
         def restart_timers():
             if hasattr(main_window, 'background_connection_timer'):
                 main_window.background_connection_timer.start(5000)
@@ -1787,6 +1788,24 @@ class AcquisitionPage(QWidget):
         
         QTimer.singleShot(5000, restart_timers)
         
+        # 로딩 화면 숨김
+        # if hasattr(main_window, 'hide_loading'):
+        #     main_window.hide_loading()
+        #     print("[+] 로딩 화면 숨김")
+        
+        # # 탐색기에 결과 로드
+        # if hasattr(main_window, 'explorer_content'):
+        #     explorer = main_window.explorer_content
+            
+        #     # 로딩 상태 해제
+        #     if hasattr(explorer, 'clear_loading_state'):
+        #         explorer.clear_loading_state()
+        #         print("[+] 탐색기 로딩 상태 해제")
+            
+        #     # 결과 로드
+        #     if hasattr(explorer, 'load_analysis_results'):
+        #         explorer.load_analysis_results(result)
+        #         print("[+] 탐색기에 결과 로드 완료")
         self.analysis_completed.emit(result)
         print("[+] analysis_completed.emit(result) 호출")
         
@@ -1801,8 +1820,17 @@ class AcquisitionPage(QWidget):
         """분석 오류 처리"""
         print(f"\n[ERROR] {error_msg}")
         
-        # 분석 중 플래그 해제
+        # ✅ 분석 중 플래그 해제
         self.is_analyzing = False
+        
+        # # 로그 추가
+        # if hasattr(self, 'final_log_view'):
+        #     self.add_log(f"❌ 오류: {error_msg}", "ERROR")
+        
+        # 로딩 화면 숨김
+        # main_window = self.window()
+        # if hasattr(main_window, 'hide_loading'):
+        #     main_window.hide_loading()
         
         # 오류 메시지
         QMessageBox.critical(self, "오류", f"분석 실패:\n{error_msg}")
