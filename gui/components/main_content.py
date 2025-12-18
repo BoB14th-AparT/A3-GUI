@@ -3,9 +3,11 @@
 ## main_content.py
 """메인 콘텐츠 영역 컴포넌트"""
 
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                             QComboBox, QTextBrowser, QFrame, QScrollArea, QSplitter
-                             , QTabWidget, QTextBrowser)
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QComboBox, QTextBrowser, QFrame, QScrollArea,
+    QSplitter, QTabWidget
+)
 from PyQt5.QtCore import Qt
 import os
 
@@ -405,9 +407,8 @@ class ExplorerContent(QWidget):
         self.scoring_table.setSpan(0, 0, 1, 8)
         self.scoring_table.setItem(0, 0, scoring_loading)
 
-        # 로그 박스 초기화 + 표시
+        #  로그 박스 초기화 + 표시
         if hasattr(self, "loading_log"):
-            self.loading_log.clear()
             self.loading_log.setVisible(True)
             self.loading_log.append(f"[+] {package_name} 분석 시작")
 
@@ -418,8 +419,6 @@ class ExplorerContent(QWidget):
             return
         if not self.loading_log.isVisible():
             self.loading_log.setVisible(True)
-        self.loading_log.append(message)
-
 
     def clear_loading_state(self):
         """로딩 상태 해제"""
@@ -431,9 +430,8 @@ class ExplorerContent(QWidget):
         self.right_table.setRowCount(0)
         self.scoring_table.setRowCount(0)
 
-        # 로그 박스 숨김
+        #  로그 박스 숨김
         if hasattr(self, "loading_log"):
-            self.loading_log.clear()
             self.loading_log.setVisible(False)
 
 
@@ -469,7 +467,7 @@ class ExplorerContent(QWidget):
         root.setContentsMargins(20, 20, 20, 20)
         root.setSpacing(0)
 
-        # 흰색 카드 컨테이너
+        # ✅ 흰색 카드 컨테이너
         card = QWidget()
         card.setStyleSheet("""
             QWidget {
@@ -479,13 +477,13 @@ class ExplorerContent(QWidget):
             }
         """)
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(0, 0, 0, 0)
-        card_layout.setSpacing(0)
+        card_layout.setContentsMargins(14, 12, 14, 14)
+        card_layout.setSpacing(10)
 
-        # 탭(목록/스코어링)
+        # ✅ (중요) self.tabs 를 먼저 만든다
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
-        self.tabs.setStyleSheet(self._tabs_qss())  # 아래 2)에서 함수로 분리할거야
+        self.tabs.setStyleSheet(self._tabs_qss())
 
         # -------------------------
         # 탭1) 목록
@@ -495,10 +493,7 @@ class ExplorerContent(QWidget):
         list_layout.setContentsMargins(0, 0, 0, 0)
         list_layout.setSpacing(0)
 
-        # 탭 바로 아래 검색바 (첨부 2번째 느낌)
         list_layout.addWidget(self.create_search_bar(), 0)
-
-        # 테이블
         list_layout.addWidget(self.create_list_tables(), 1)
         self.tabs.addTab(list_tab, "목록")
 
@@ -510,15 +505,33 @@ class ExplorerContent(QWidget):
         scoring_layout.setContentsMargins(0, 0, 0, 0)
         scoring_layout.setSpacing(0)
 
-        scoring_layout.addWidget(self.create_search_bar(), 0)   # 스코어링도 동일 검색바
+        scoring_layout.addWidget(self.create_search_bar(), 0)
         self.scoring_table = self.create_scoring_table()
         scoring_layout.addWidget(self.scoring_table, 1)
         self.tabs.addTab(scoring_tab, "스코어링")
 
-        # 카드에 탭을 올리기
+        # ✅ 로딩 로그 박스
+        self.loading_log = QTextBrowser()
+        self.loading_log.setVisible(False)
+        self.loading_log.setFixedHeight(140)
+        self.loading_log.setStyleSheet("""
+            QTextBrowser {
+                background: #0f172a;
+                color: #e5e7eb;
+                border: none;
+                border-top: 1px solid #e6e6e6;
+                padding: 8px;
+                font-size: 11px;
+            }
+        """)
+
+        # ✅ 카드에 탭 + 로그 올리기
         card_layout.addWidget(self.tabs, 1)
         card_layout.addWidget(self.loading_log, 0)
+
+        # ✅ 루트에 카드 추가
         root.addWidget(card, 1)
+
 
     def create_scoring_table(self):
         table = QTableWidget()
@@ -543,7 +556,7 @@ class ExplorerContent(QWidget):
         header.setMinimumHeight(24)
         header.setFixedHeight(24)
 
-        # 추가 (핵심)
+        #  추가 (핵심)
         header.setHighlightSections(False)
         table.setSortingEnabled(False)
 
@@ -734,7 +747,7 @@ class ExplorerContent(QWidget):
     
 
     def create_left_table(self):
-        """왼쪽 테이블 생성 (체크박스, No., 이름) 고정 3컬럼"""
+        """왼쪽 테이블 생성 (체크박스, No., 이름)  고정 3컬럼"""
         table = QTableWidget()
         table.setColumnCount(3)
         table.setHorizontalHeaderLabels(["", "No.", "이름"])
@@ -745,7 +758,7 @@ class ExplorerContent(QWidget):
         header.setSectionResizeMode(QHeaderView.Fixed)
         header.setDefaultAlignment(Qt.AlignCenter)
 
-        # 추가 (핵심)
+        #  추가 (핵심)
         header.setHighlightSections(False)
         table.setSortingEnabled(False)
 
@@ -758,13 +771,13 @@ class ExplorerContent(QWidget):
         table.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         table.verticalHeader().setVisible(False)
-        table.verticalHeader().setDefaultSectionSize(22)     # 촘촘
+        table.verticalHeader().setDefaultSectionSize(22)     #  촘촘
         table.setAlternatingRowColors(True)
 
-        # 왼쪽은 고정이므로 가로 스크롤은 끔
+        #  왼쪽은 고정이므로 가로 스크롤은 끔
         table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        # 폭 고정(체크/No/이름)
+        #  폭 고정(체크/No/이름)
         table.setMinimumWidth(30 + 50 + 180 + 2)
         table.setMaximumWidth(30 + 50 + 180 + 2)
 
@@ -775,7 +788,7 @@ class ExplorerContent(QWidget):
 
     
     def create_right_table(self):
-        """오른쪽 테이블 생성 (경로/종류/속성) 경로를 가로로 더 넓게"""
+        """오른쪽 테이블 생성 (경로/종류/속성)  경로를 가로로 더 넓게"""
         table = QTableWidget()
         table.setColumnCount(3)
         table.setHorizontalHeaderLabels(["경로", "종류", "속성"])
@@ -785,7 +798,7 @@ class ExplorerContent(QWidget):
         header.setMinimumHeight(24)
         header.setFixedHeight(24)
 
-        # 추가 (핵심)
+        #  추가 (핵심)
         header.setHighlightSections(False)
         table.setSortingEnabled(False)
 
@@ -793,11 +806,11 @@ class ExplorerContent(QWidget):
         table.verticalHeader().setDefaultSectionSize(28)
 
 
-        # 경로(0)만 넓게: Stretch
+        #  경로(0)만 넓게: Stretch
         header.setSectionResizeMode(QHeaderView.Fixed)
         header.setSectionResizeMode(0, QHeaderView.Stretch)
 
-        # 종류/속성은 고정 폭
+        #  종류/속성은 고정 폭
         table.setColumnWidth(1, 90)   # 종류
         table.setColumnWidth(2, 90)   # 속성
 
@@ -805,10 +818,10 @@ class ExplorerContent(QWidget):
         table.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         table.verticalHeader().setVisible(False)
-        table.verticalHeader().setDefaultSectionSize(22)  # 촘촘
+        table.verticalHeader().setDefaultSectionSize(22)  #  촘촘
         table.setAlternatingRowColors(True)
 
-        # 오른쪽은 가로 스크롤(필요 시)
+        #  오른쪽은 가로 스크롤(필요 시)
         table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
         table.setShowGrid(True)
@@ -832,7 +845,7 @@ class ExplorerContent(QWidget):
                 border: none;
             }
 
-            /* 너가 원하는 클릭 하이라이트 색 */
+            /*  너가 원하는 클릭 하이라이트 색 */
             QTableWidget::item:selected {
                 background-color: #FFDB97;
                 color: #111;
@@ -843,12 +856,12 @@ class ExplorerContent(QWidget):
                 color: white;
                 font-size: 11px;
                 font-weight: bold;
-                padding: 6px 6px;                 /* 헤더 높이(원하면 더 키워도 됨) */
+                padding: 6px 6px;                 /* 🔥 헤더 높이(원하면 더 키워도 됨) */
                 border-right: 1px solid #1E3A52;
                 border-bottom: 1px solid #1E3A52;
             }
 
-            /* 핵심: “눌림/선택/호버” 상태에서도 색이 절대 안 바뀌게 고정 */
+            /*  핵심: “눌림/선택/호버” 상태에서도 색이 절대 안 바뀌게 고정 */
             QHeaderView::section:pressed,
             QHeaderView::section:selected,
             QHeaderView::section:hover {
@@ -870,23 +883,23 @@ class ExplorerContent(QWidget):
         self.left_table = self.create_left_table()      # 기존 함수 재사용
         self.right_table = self.create_right_table()    # 기존 함수 재사용
 
-        # 왼쪽은 '고정' 느낌: 가로 스크롤 끄기
+        #  왼쪽은 '고정' 느낌: 가로 스크롤 끄기
         self.left_table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        # 오른쪽은 가로 스크롤 항상 보이게(두번째 스샷 느낌)
+        #  오른쪽은 가로 스크롤 항상 보이게(두번째 스샷 느낌)
         self.right_table.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
-        # 촘촘한 스타일 적용
+        #  촘촘한 스타일 적용
         self.left_table.setAlternatingRowColors(True)
         self.right_table.setAlternatingRowColors(True)
         self.left_table.setStyleSheet(self._table_qss_dense())
         self.right_table.setStyleSheet(self._table_qss_dense())
 
-        # 행 높이(두번째 스샷 느낌)
+        #  행 높이(두번째 스샷 느낌)
         self.left_table.verticalHeader().setDefaultSectionSize(22)
         self.right_table.verticalHeader().setDefaultSectionSize(22)
 
-        # 세로 스크롤 동기화
+        #  세로 스크롤 동기화
         self.left_table.verticalScrollBar().valueChanged.connect(
             self.right_table.verticalScrollBar().setValue
         )
@@ -894,7 +907,7 @@ class ExplorerContent(QWidget):
             self.left_table.verticalScrollBar().setValue
         )
 
-        # 선택 동기화
+        #  선택 동기화
         self.left_table.selectionModel().selectionChanged.connect(self.sync_selection_left_to_right)
         self.right_table.selectionModel().selectionChanged.connect(self.sync_selection_right_to_left)
 
