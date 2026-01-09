@@ -81,7 +81,7 @@ class MiddleSidebar(QStackedWidget):
         self.device_info = device_info  # 세션에 저장
         self.acquisition_connected.update_info(device_info)
         
-        # 분석 중이면 페이지 전환 안 함!
+        #  분석 중이면 페이지 전환 안 함!
         main_window = self.window()
         if hasattr(main_window, 'acquisition_page'):
             if hasattr(main_window.acquisition_page, 'is_analyzing') and main_window.acquisition_page.is_analyzing:
@@ -199,7 +199,7 @@ def create_acquisition_disconnected_page():
 
     title_layout.addStretch()  
 
-    # 새로고침 버튼 추가
+    #  새로고침 버튼 추가
     refresh_btn = QPushButton()
     refresh_btn.setObjectName("refresh_btn_disconnected")  # ← 나중에 찾기 위한 이름
     refresh_btn.setFixedSize(20, 20)
@@ -371,15 +371,15 @@ class AcquisitionConnectedPage(QWidget):
         phone_path = os.path.join("icon", "S20.png")
 
         if os.path.exists(phone_path):
-            self.phone_pixmap = QPixmap(phone_path)  # 원본 저장
-            scaled_pixmap = self.phone_pixmap.scaled(240, 480, Qt.KeepAspectRatio, Qt.SmoothTransformation)  # 수정!
+            self.phone_pixmap = QPixmap(phone_path)  #  원본 저장
+            scaled_pixmap = self.phone_pixmap.scaled(240, 480, Qt.KeepAspectRatio, Qt.SmoothTransformation)  #  수정!
             phone_label.setPixmap(scaled_pixmap)
         else:
             phone_label.setText("📱")
             phone_label.setStyleSheet("font-size: 80px;")
-            self.phone_pixmap = None  # None으로 초기화
+            self.phone_pixmap = None  #  None으로 초기화
 
-        self.phone_label = phone_label  # 라벨을 멤버 변수로 저장
+        self.phone_label = phone_label  #  라벨을 멤버 변수로 저장
         center_layout.addWidget(phone_label)
         
         # 연결선 이미지
@@ -547,7 +547,7 @@ class ExplorerSidebar(QWidget):
             QTreeWidget::item {
                 padding: 8px 6px;
                 color: #333;
-                border: none;              /* 전역 선 제거 */
+                border: none;              /*  전역 선 제거 */
             }
             QTreeWidget::item:hover {
                 background-color: #f5f5f5;

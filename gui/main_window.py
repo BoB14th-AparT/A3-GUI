@@ -24,7 +24,7 @@ class AparTa3GUI(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # ✅ QItemSelection 메타타입 등록
+        #  QItemSelection 메타타입 등록
         try:
             from PyQt5.QtCore import QItemSelection, qRegisterMetaType
             qRegisterMetaType("QItemSelection")
@@ -103,10 +103,14 @@ class AparTa3GUI(QMainWindow):
             self.acquisition_page.case_folder = case_path
             print(f"[+] case_folder updated: {case_path}")
 
-        # ✅ 로딩 화면 표시
+        if self.explorer_content and hasattr(self.explorer_content, "set_case_path"):
+            self.explorer_content.set_case_path(case_path)
+            print(f"[+] explorer_content case_path updated: {case_path}")
+
+        #  로딩 화면 표시
         self.show_loading()
         
-        # ✅ 획득 정보 페이지로 전환 + 앱 로드
+        #  획득 정보 페이지로 전환 + 앱 로드
         #QTimer.singleShot(100, self.navigate_to_acquisition_and_load)
     
     def navigate_to_acquisition_and_load(self):
@@ -219,6 +223,8 @@ class AparTa3GUI(QMainWindow):
     
     def on_analysis_completed(self, result: dict):
         """분석 완료 시 탐색기 탭에 결과 표시"""
+        self.finish_analysis_loading()
+
         print(f"\n{'='*60}")
         print("[+] 분석 완료! 탐색기 탭에 결과 반영")
         print(f"[+] result keys = {list(result.keys()) if isinstance(result, dict) else type(result)}")
@@ -244,12 +250,12 @@ class AparTa3GUI(QMainWindow):
 
     def check_background_connection(self):
         """백그라운드에서 5초마다 연결 체크"""
-        # ✅ 분석 중이면 체크 안 함
+        #  분석 중이면 체크 안 함
         if hasattr(self.acquisition_page, 'is_analyzing') and self.acquisition_page.is_analyzing:
             print("[+] 분석 진행 중 - 백그라운드 체크 스킵")
             return
         
-        # ✅ 현재 탐색기 탭이면 체크 안 함
+        #  현재 탐색기 탭이면 체크 안 함
         if self.content_stack.currentIndex() == 2:  # 탐색기 = 인덱스 2
             return
         
@@ -271,7 +277,7 @@ class AparTa3GUI(QMainWindow):
                     if device_info and self.middle_sidebar:
                         if self.middle_sidebar.device_info != device_info:
                             self.middle_sidebar.device_info = device_info
-                            # ✅ 페이지 전환 안 함! (세션 저장만)
+                            #  페이지 전환 안 함! (세션 저장만)
                             print(f"[백그라운드] 연결 감지됨 (세션 저장만)")
         
         except Exception as e:
@@ -316,7 +322,7 @@ class AparTa3GUI(QMainWindow):
         self.middle_sidebar.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.middle_sidebar.setMinimumHeight(0)
         self.middle_sidebar.setMaximumHeight(16777215)  # (선택) 혹시 고정 maxheight 걸려있으면 풀기
-        # ✅ 새로고침 버튼에 수동 연결 체크 함수 연결
+        #  새로고침 버튼에 수동 연결 체크 함수 연결
         self.middle_sidebar.set_refresh_callback(self.manual_check_connection)
         content_layout.addWidget(self.middle_sidebar)
         
@@ -334,7 +340,7 @@ class AparTa3GUI(QMainWindow):
         self.content_stack.addWidget(self.acquisition_page)
 
         # ← 아래 2줄 추가: 탐색기 페이지
-        self.explorer_content = create_explorer_content()  # ✅ self.explorer_content로 저장
+        self.explorer_content = create_explorer_content()  #  self.explorer_content로 저장
         self.content_stack.addWidget(self.explorer_content)
         content_layout.addWidget(self.content_stack)
         
@@ -388,7 +394,7 @@ class AparTa3GUI(QMainWindow):
         overlay_layout.setAlignment(Qt.AlignCenter)
         
         # 로딩 텍스트
-        # 로딩 텍스트 (✅ 나중에 문구 바꾸려고 멤버로 저장)
+        # 로딩 텍스트 ( 나중에 문구 바꾸려고 멤버로 저장)
         self.loading_label = QLabel("획득 정보로 이동중입니다...")
         self.loading_label.setStyleSheet("""
             font-size: 16px;
@@ -452,10 +458,10 @@ class AparTa3GUI(QMainWindow):
 
         if hasattr(self, "overlay_log"):
             self.overlay_log.clear()
-            # analysis일 때만 로그 박스 표시
-            self.overlay_log.setVisible(mode == "analysis")
+            self.overlay_log.setVisible(False)   #  분석 중에도 로그 박스 안 보이게
 
-        # ✅ 문구 변경 가능
+
+        #  문구 변경 가능
         if message is not None and hasattr(self, "loading_label"):
             self.loading_label.setText(message)
 
@@ -472,11 +478,11 @@ class AparTa3GUI(QMainWindow):
         self.loading_animation.setStartValue(QRect(0, 0, bar_width, 4))
         self.loading_animation.setEndValue(QRect(container_width - bar_width, 0, bar_width, 4))
 
-        # ✅ 최상위로 올리기
+        #  최상위로 올리기
         self.loading_overlay.raise_()
         self.loading_overlay.show()
 
-        # ✅ “획득정보에서 즉시 뜨게” (메인스레드가 잠깐이라도 바쁘면 안 보일 수 있음)
+        #  “획득정보에서 즉시 뜨게” (메인스레드가 잠깐이라도 바쁘면 안 보일 수 있음)
         QApplication.processEvents()
 
         self.loading_direction = True
@@ -489,11 +495,11 @@ class AparTa3GUI(QMainWindow):
         if not hasattr(self, 'loading_round_count'):
             self.loading_round_count = 0
 
-        # ✅ analysis 모드는 “끝날 때까지 무한” (자동 stop 금지)
+        #  analysis 모드는 “끝날 때까지 무한” (자동 stop 금지)
         if getattr(self, "_loading_mode", "case_init") != "analysis":
             self.loading_round_count += 1
 
-            # ✅ 2번 왕복 후 종료 + case_init이면 획득정보 이동
+            #  2번 왕복 후 종료 + case_init이면 획득정보 이동
             if self.loading_round_count >= 4:
                 self.loading_animation.stop()
                 self.loading_round_count = 0
@@ -529,7 +535,7 @@ class AparTa3GUI(QMainWindow):
             
             # 로딩 중일 때 컨테이너와 바 크기도 업데이트
             if self.loading_overlay.isVisible():
-                # ✅ 최상위로 다시 올리기
+                #  최상위로 다시 올리기
                 self.loading_overlay.raise_()
                 
                 container_width = self.width()
@@ -568,14 +574,9 @@ class AparTa3GUI(QMainWindow):
     def finish_analysis_loading(self):
         """분석 종료 시 로딩 닫기"""
         self.hide_loading()
+        if self.explorer_content and hasattr(self.explorer_content, "clear_loading_state"):
+            self.explorer_content.clear_loading_state()
 
-
-    def append_analysis_log(self, msg: str):
-        """분석 로그를 탐색기 로딩 UI(loading_log)에 누적"""
-        if not msg:
-            return
-        if self.explorer_content and hasattr(self.explorer_content, "append_loading_log"):
-            self.explorer_content.append_loading_log(msg)
 
     def finish_analysis_loading(self):
         """분석 종료 시 로딩 닫기"""

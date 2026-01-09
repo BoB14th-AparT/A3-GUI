@@ -120,7 +120,7 @@ def load_dynamic_meta_ids(json_path: str) -> None:
             for sid_str, info in data["ids"].items():
                 sid = int(sid_str)
                 
-                # ✅ 수정: base + subdir 결합
+                # 수정: base + subdir 결합
                 base = info.get("base", "files")  # 기본값: files
                 subdir = info.get("subdir", "")
                 
@@ -139,7 +139,7 @@ def load_dynamic_meta_ids(json_path: str) -> None:
 
                 META_STORAGE_IDS_DYNAMIC[sid] = full_path
                 
-                # ✅ 디버그 로그
+                #  디버그 로그
                 if len(META_STORAGE_IDS_DYNAMIC) <= 5:
                     print(f"[META_IDS] Loaded: {sid:#x} → {full_path}")
         
@@ -177,12 +177,12 @@ def load_meta_storage_ids_dynamic(json_path: str) -> None:
         debug_log(f"[META-ID] meta_storage_ids.json 읽기 실패: {e!r}")
         return
 
-    ids = data.get("ids") or data  # 혹시 그냥 flat dict 로 저장했을 경우 대비
+    ids = data.get("ids") or data  
     loaded = 0
 
     for k, v in ids.items():
         try:
-            sid = int(k, 0)  # "1832390025" 혹은 "0x6d4e..." 둘 다 처리
+            sid = int(k, 0) 
         except Exception:
             continue
 
@@ -207,7 +207,7 @@ def load_meta_storage_ids_dynamic(json_path: str) -> None:
             # getDir 기반일 때는 app_ 접두어가 붙는 경우가 많아서 그대로 써준다
             rel = f"app_{subdir}" if subdir and not subdir.startswith("app_") else subdir
         else:
-            # 기타: 그냥 subdir만
+            # subdir
             rel = subdir or base
 
         META_STORAGE_IDS_DYNAMIC[sid] = rel
@@ -310,12 +310,13 @@ def inject_dcloud_special_paths(
             artifact_path=path,
             row=stub_row,
         )
-        # line 번호는 의미 없으니 0으로 통일
+        # line 번호 : 0으로 통일
         rec["line"] = 0
         rows.append(rec)
 
     # 내부 cache 경로 (실제 발견된 경로)
     _add(f"File: /data/user/0/{pkg_name}/files/cnc3ejE6/eje3cnc")
+
 # ========== 토큰화 로직 ==========
 class PathTokenizer:
     def __init__(self):
@@ -505,7 +506,6 @@ class ArtifactExtractorMerged:
         "image_manager_disk_cache", "coil3_disk_cache", "picasso-cache", "glide_disk_cache",
         "image_cache", "okhttp_cache", "okhttp", "volley", "uil-images", "lottie_network_cache",
         "NaverAdsServices", "audience_network",
-        # 추가 패턴
         "crash reports", "crash_reports", "crashlytics",
         "webview", "WebView",
         "data", "temp", "tmp",
@@ -616,7 +616,6 @@ class ArtifactExtractorMerged:
         "video": ("cache", "video"),
         "image": ("cache", "image"),
         "photo": ("cache", "photo"),
-        #  새로 추가
         "uil-images": ("cache", "uil-images"),
         "code_cache": ("root", "code_cache"),
         "code_cache/secondary-dexes": ("root", "code_cache/secondary-dexes"),
@@ -627,9 +626,7 @@ class ArtifactExtractorMerged:
         "dex": ("root", "dex"),
         "no_backup": ("root", "no_backup"),
         "phenotype_storage_info": ("files", "phenotype_storage_info"),
-        "cache": ("cache", "cache"),  # cache/cache 중복 경로 -> apk 4개 공통
-
-        #  Instagram / Threads 추가 힌트
+        "cache": ("cache", "cache"), 
         "exoplayercachedir": ("cache", "ExoPlayerCacheDir/videocache"),
         "ExoPlayerCacheDir": ("cache", "ExoPlayerCacheDir/videocache"),
         "creation_file_manager": ("files", "creation_file_manager"),
@@ -690,25 +687,18 @@ class ArtifactExtractorMerged:
             self._log(f"[DEBUG END]")
             self.debug_file.close()
 
-    ## 1126 Threads 추가
     def _detect_dynamic_base_from_trace(self, package: str, trace_slice: List[Dict[str, Any]], caller: str = "") -> Optional[str]:
         """
-        trace에서 getCacheDir/getFilesDir 호출과 리터럴을 추적해서 base 경로를 유추한다.
+        trace에서 getCacheDir/getFilesDir 호출과 리터럴을 추적해서 base 경로를 유추.
         기본적으로 일반화된 규칙을 사용하지만,
         일부 앱(예: Meta / Instagram)의 잘 알려진 스토리지 패턴은
-        별도의 힌트 테이블(META_STORAGE_HARDCODED_PATHS 등)을 통해 보정한다.
+        별도의 힌트 테이블(META_STORAGE_HARDCODED_PATHS 등)을 통해 보정.
         """
         if not trace_slice:
             return None
 
-        # Step 0: Meta(Facebook/Instagram/Threads) storage config 유틸 처리
-        # for inst in trace_slice:
-        #     callee_raw = (inst.get("from_callee") or inst.get("callee") or "")
-        #     if not callee_raw:
-        #         continue
-
-            # Meta 앱 (Threads/Instagram/Facebook/WhatsApp 등) storage 유틸
-            # A00~A09 모든 변형 매칭
+        # Meta 앱 (Threads/Instagram/Facebook/WhatsApp 등) storage 유틸
+        # A00~A09 모든 변형 매칭
         for inst in trace_slice:
             callee_raw = (inst.get("from_callee") or inst.get("callee") or "")
             if re.match(r"^LX/[^;]+;->A0[0-9]\(Landroid/content/Context;I\)Ljava/io/File;$", callee_raw):
@@ -742,10 +732,9 @@ class ArtifactExtractorMerged:
                     else:
                         print(f"[META-DYN-MISS] id={storage_id:#x} NOT in META_STORAGE_IDS_DYNAMIC")
 
-        # Step 0.5: 앱 특화(Instagram 등) 하드코딩 힌트 처리
-        # 여기서는 trace 안의 const-string / arg_literals_snapshot에서 문자열 토큰만 모아서
-        # 상단에 정의된 META_STORAGE_HARDCODED_PATHS와 매칭시킨다.
-        # → 이 함수는 "테이블 기반"으로만 동작하고, 앱 이름은 전역 상수에만 박힌다.
+        # Step 0.5: 앱 특화 하드코딩 힌트 처리
+        # 여기서는 trace 안의 const-string / arg_literals_snapshot에서 문자열 토큰만 모아, 상단에 정의된 META_STORAGE_HARDCODED_PATHS와 매칭.
+        # "테이블 기반" 동작, 앱 이름은 전역 상수에만 박힌다.
         for inst in trace_slice:
             tokens: List[str] = []
 
@@ -766,7 +755,6 @@ class ArtifactExtractorMerged:
             for t in tokens:
                 for pattern, subpath in META_STORAGE_HARDCODED_PATHS.items():
                     if pattern.lower() in t:
-                        # 여기서 subpath는 "cache/ExoPlayerCacheDir/videocache" 같은 상대 경로
                         return f"File: /data/user/0/{package}/{subpath}"
 
 
@@ -869,8 +857,7 @@ class ArtifactExtractorMerged:
         # File 생성자는 early return 스킵 (parent + child 조합 필요)
         is_file_constructor = "Ljava/io/File;-><init>(" in (sink or "")
         
-        # [FIX] Crashlytics v2 토큰이 보이면, 멀티 프로세스 확장을 위해 early return을 금지하고
-        # 아래의 construct_path로 무조건 흘려보냅니다.
+        # Crashlytics v2 토큰이 보이면, 멀티 프로세스 확장을 위해 early return X, 아래의 construct_path로 무조건 흘려보냄
         crashlytics_token = ".com.google.firebase.crashlytics.files.v2"
         is_crashlytics = False
         if crashlytics_token in (source or "") or crashlytics_token in (sink or ""):
@@ -879,7 +866,6 @@ class ArtifactExtractorMerged:
             for inst in trace_slice:
                 if crashlytics_token in inst.get("const_string", ""):
                     is_crashlytics = True; break
-                # arg_literals도 간단히 확인
                 als = inst.get("arg_literals_snapshot") or {}
                 for k in ("0","1","2"):
                     v = als.get(k) or {}
@@ -914,8 +900,7 @@ class ArtifactExtractorMerged:
                    arg_values: Dict[str, Dict[str,str]],
                    trace_slice: List[Dict[str, Any]]) -> str:
 
-        # [FIX] Crashlytics v2 멀티프로세스 로직을 최우선 순위로 끌어올림
-        # 기존 로직이 중간에 가로채지 못하도록 맨 처음에 수행
+        # Crashlytics v2 멀티프로세스 로직을 최우선 순위
         crashlytics_token = ".com.google.firebase.crashlytics.files.v2"
         is_crashlytics_flow = False
         
@@ -956,14 +941,13 @@ class ArtifactExtractorMerged:
                 paths.append(f"File: {base}:{sanitized}")
             return paths
         
-        # ===== [1126_threads] app_* 디렉터리 처리 -> 22개 나오던 기존 코드 =====
+        # app_* 디렉터리 처리 
         if "->getDir(" in (sink or ""):
             dir_name = arg_values.get("arg1", {}).get("val")
             if dir_name and not self.is_placeholder(dir_name):
                 return f"File: /data/user/0/{package}/app_{dir_name}"
         
-        # [FIX] Crashlytics v2는 아래의 전용 로직(멀티 프로세스 처리)을 타야 하므로
-        # 동적 베이스 탐지에서 제외
+        # Crashlytics v2는 아래의 전용 로직(멀티 프로세스 처리), 동적 베이스 탐지에서 제외
         is_crashlytics_v2 = False
         if ".com.google.firebase.crashlytics.files.v2" in (source or "") or ".com.google.firebase.crashlytics.files.v2" in (sink or ""):
             is_crashlytics_v2 = True
@@ -978,7 +962,7 @@ class ArtifactExtractorMerged:
             if detected_base:
                 return detected_base
 
-        # ===== [1126_threads] cache 하위 디렉터리 강화 =====
+        # =====  cache 하위 디렉터리 강화 =====
         if self._is_cache_subdir_flow(trace_slice, package):
             base_cache = f"/data/user/0/{package}/cache"
             literal = self.find_last_literal_near_sink(trace_slice)
@@ -989,7 +973,7 @@ class ArtifactExtractorMerged:
         if detected_base:
             return detected_base
 
-        # ========== 추가: placeholder 우선 처리 ==========
+        # ========== placeholder 우선 처리 ==========
         for arg_name, arg_data in arg_values.items():
             val = arg_data.get("val", "")
             if val and isinstance(val, str) and val.startswith("<") and val.endswith(">"):
@@ -1124,11 +1108,9 @@ class ArtifactExtractorMerged:
                 return f"Database: /data/user/0/{package}/databases"
             return f"Database: /data/user/0/{package}/databases/{db_path_arg}"
 
-        # File I/O - path_enhanced.py 로직 적용
+        # File I/O 
         if "Ljava/io/File;-><init>(" in (sink or ""):
-            # ---- Crashlytics v2 특례 1단계: trace 안 절대경로가 있으면 그대로 사용 ----
             for inst in (trace_slice or []):
-                # arg_literals_snapshot 내부 검사
                 als = inst.get("arg_literals_snapshot") or {}
                 for k in ("0", "1", "2", "3", "4"):
                     v = als.get(k) or {}
@@ -1157,12 +1139,10 @@ class ArtifactExtractorMerged:
 
                         break
 
-            # ---- Crashlytics v2 특례 2단계: trace_slice에서 발견되면 fallback ----
             has_crashlytics_v2 = False
             if ".com.google.firebase.crashlytics.files.v2" in (source or "") or ".com.google.firebase.crashlytics.files.v2" in (sink or ""):
                 has_crashlytics_v2 = True
             else:
-                # trace_slice에서도 확인
                 for inst in trace_slice:
                     const_str = inst.get("const_string", "")
                     if ".com.google.firebase.crashlytics.files.v2" in const_str:
@@ -1173,28 +1153,22 @@ class ArtifactExtractorMerged:
                 base = f"/data/user/0/{package}/files/.com.google.firebase.crashlytics.files.v2"
                 procs = getattr(self, "manifest_process_names", [])
                 if not procs:
-                    # manifest가 없으면 패키지 이름을 프로세스 이름으로 사용
                     procs = [package]
 
-                # 모든 프로세스에 대한 경로를 list로 반환
-                # 프로세스 이름을 sanitize: replaceAll("[^a-zA-Z0-9.]", "_")
                 paths = []
                 for proc in procs:
                     sanitized = re.sub(r'[^a-zA-Z0-9.]', '_', proc)
                     paths.append(f"File: {base}:{sanitized}")
                 return paths
 
-            # File 생성자 구분:
-            # - File(String): arg0=this, arg1=path
-            # - File(File, String): arg0=this, arg1=parent, arg2=child
+            # File 생성자 구분
             is_file_string_ctor = "Ljava/io/File;-><init>(Ljava/lang/String;)V" in (sink or "")
             is_file_file_string_ctor = "Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V" in (sink or "")
 
-            # ---- File(String) 생성자: base dir 우선 + cache/files fallback ----
+            # File(String) 생성자: base dir 우선 + cache/files fallback
             if is_file_string_ctor:
                 path_val = arg_values.get("arg1", {}).get("val")
                 if path_val and not self.is_placeholder(path_val):
-                    # 이미 절대 경로면 그대로 사용
                     if self.looks_like_absolute(path_val):
                         return f"File: {path_val}"
 
@@ -1327,7 +1301,7 @@ class ArtifactExtractorMerged:
             val = arg_values.get("arg2", {"val":"<value>","origin":None})["val"]
             return f"SharedPreferences: /data/user/0/{package}/shared_prefs/[prefs].xml -> {key}={val}"
 
-        # 핵심: harvest_file_child_chain으로 모든 리터럴 수집
+        # harvest_file_child_chain으로 모든 리터럴 수집
         segs = self.harvest_file_child_chain(trace_slice)
         if segs:
             last = self._safe_last_segment(segs[-1]) if segs else None
@@ -1336,9 +1310,6 @@ class ArtifactExtractorMerged:
             if last and last != "name" and TOPLEVEL_APPDIR_RX.match(last):
                 return f"File: /data/user/0/{package}/{last}"
 
-            # 확장자 힌트
-            #  - 일반 확장자: /files
-            #  - .cache / .tmp / .temp : 캐시 성격이 강하므로 /cache
             if last and last != "name" and FILE_EXT_RX.match(last):
                 ext = last.rsplit(".", 1)[-1].lower()
                 if ext in ("cache", "tmp", "temp"):
@@ -1530,7 +1501,6 @@ class ArtifactExtractorMerged:
 
         return candidates[0] if candidates else None
 
-    # 나머지 헬퍼 메서드들 (동일하게 유지)
     def _scan_return_summary_abs(self, trace_slice: List[Dict[str, Any]], pkg: str) -> Optional[str]:
         if not trace_slice: return None
         for inst in reversed(trace_slice):
@@ -1681,8 +1651,7 @@ class ArtifactExtractorMerged:
 
     def load_manifest_process_names(self, manifest_path: str, package: str):
         """
-        AndroidManifest.xml에서 android:process 속성을 읽어
-        멀티 프로세스 이름들을 수집한다.
+        AndroidManifest.xml에서 android:process 속성을 읽어, 멀티 프로세스 이름들을 수집.
         """
         try:
             import xml.etree.ElementTree as ET
@@ -1716,13 +1685,11 @@ class ArtifactExtractorMerged:
                 for node in root.iter(tag)
             )
             if has_resource_ref:
-                # 일반적인 멀티프로세스 suffix 추가
                 for suffix in ["_geo", "_location", "_push"]:
                     procs.add(package + suffix)
 
             self.manifest_process_names = sorted(list(procs))
         except Exception:
-            # 실패해도 기본값만 사용
             self.manifest_process_names = [package]
 
     def _ret(self, pkg, caller, source, sink, artifact_path, row):
@@ -1737,7 +1704,6 @@ class ArtifactExtractorMerged:
 
     def _ret_with_tokenization(self, pkg, caller, source, sink, artifact_path, row):
         result = self._ret(pkg, caller, source, sink, artifact_path, row)
-        # 매칭 정보 추가
         result['matched_source_pattern'] = row.get('matched_source_pattern', '')
         result['matched_sink_pattern'] = row.get('matched_sink_pattern', '')
 
@@ -1840,7 +1806,6 @@ class ArtifactExtractorMerged:
                 return True
         return False
 
-    # [1126] threads 추가
     def _is_cache_subdir_flow(self, trace_slice: List[Dict[str, Any]], package: str) -> bool:
         """
         trace_slice를 보고 'cache 하위 디렉터리'를 만드는 흐름인지 판별하는 헬퍼.
@@ -2182,8 +2147,6 @@ class ArtifactExtractorMerged:
                     val_to_append = reg_map.get(arg_reg, "")
                     if sb_reg not in sb_acc:
                         sb_acc[sb_reg] = ""
-                    # 메모리 보호: StringBuilder 누적 크기 제한 (최대 2048자)
-                    # val_to_append도 크기 제한
                     if len(sb_acc[sb_reg]) < 2048 and len(val_to_append) < 512:
                         sb_acc[sb_reg] += val_to_append
 
@@ -2447,7 +2410,7 @@ class ArtifactExtractorMerged:
 
     def recover_parent_dir_from_trace(self, package: str, trace_slice: List[Dict[str, Any]],
                                       want_extra_segment: bool = False) -> Tuple[Optional[str], Optional[str]]:
-        """path_enhanced.py의 핵심 로직 - 베이스 디렉터리 + 리터럴 동시 수집"""
+        """ 베이스 디렉터리 + 리터럴 동시 수집"""
         last_dir = None
         last_const = None
 
@@ -2455,9 +2418,8 @@ class ArtifactExtractorMerged:
             op = inst.get("op", "")
             callee = inst.get("from_callee") or inst.get("callee") or ""
 
-            # const-string을 만나면 저장 (베이스 찾기 전까지)
             if op == "const-string":
-                if not last_const:  # 가장 마지막(싱크에 가까운) const-string만 저장
+                if not last_const: 
                     last_const = inst.get("const_string", "")
                 continue
 
@@ -2542,7 +2504,7 @@ class ArtifactExtractorMerged:
         if ext in ("wav", "mp3", "m4a", "ogg", "dat", "json", "xml", "lock", "pb", "properties"):
             return False
 
-        # ★ .cache / .tmp / .temp 는 컨텍스트와 상관없이 cache로 간주
+        # .cache / .tmp / .temp 는 컨텍스트와 상관없이 cache로 간주
         if ext in ("cache", "tmp", "temp"):
             return True
 
@@ -2707,7 +2669,7 @@ def process_jsonl(input_path: str, output_path: str, verbose: bool=False, enable
     manifest_loaded = False
 
     pkg_name: str | None = None
-    seen_dcloud: bool = False   #  io/dcloud 프레임워크 사용 여부
+    seen_dcloud: bool = False   # io/dcloud 프레임워크 사용 여부
 
     with open(input_path, "r", encoding="utf-8") as f:
         for ln, line in enumerate(f, 1):
@@ -2727,9 +2689,6 @@ def process_jsonl(input_path: str, output_path: str, verbose: bool=False, enable
             #  Dcloud/uni-app 시그니처 자동 감지 
             if not seen_dcloud and looks_like_dcloud_row(obj):
                 seen_dcloud = True
-
-            # 원래 아티팩트 추출 로직
-            #r = ext.extract(obj)
 
             # 첫 번째 유효 row에서 manifest와 package 연결
             if (not manifest_loaded) and manifest_candidate.exists():
@@ -2761,7 +2720,7 @@ def process_jsonl(input_path: str, output_path: str, verbose: bool=False, enable
 
     # Facebook SoLoader 감지 → lib-main 자동 주입
     seen_soloader = any("com/facebook/soloader" in (r.get("caller", "") + r.get("source", "")) for r in rows)
-    if pkg_name and seen_soloader and INJECT_HARDCODED_PATHS:  # ← 조건 추가
+    if pkg_name and seen_soloader and INJECT_HARDCODED_PATHS: 
         # lib-main 경로 추가
         stub_row = {
             "tainted": False,
@@ -2779,13 +2738,13 @@ def process_jsonl(input_path: str, output_path: str, verbose: bool=False, enable
         rec["line"] = 0
         rows.append(rec)
 
-    # 🆕 Instagram / Threads 하드코딩 경로 자동 주입
+    # Instagram / Threads 하드코딩 경로 자동 주입
     seen_meta_storage = any(
         "com/instagram" in (r.get("caller", "") + r.get("source", ""))
         for r in rows
     )
 
-    if pkg_name and seen_meta_storage and INJECT_HARDCODED_PATHS:  # ← 조건 추가
+    if pkg_name and seen_meta_storage and INJECT_HARDCODED_PATHS: 
          for pattern, subpath in META_STORAGE_HARDCODED_PATHS.items():
             stub_row = {
                 "tainted": False,
@@ -2803,10 +2762,8 @@ def process_jsonl(input_path: str, output_path: str, verbose: bool=False, enable
             rec["line"] = 0
             rows.append(rec)
 
-    #[1128]
     # Facebook/Instagram/Threads/WhatsApp 등 Meta 앱 storage 감지
     # 방법 1: LX/[^;]+;->A0[0-9] 메서드 감지 (Threads, Instagram 등)
-    # 방법 2: com/facebook 패키지 감지 (FB Lite 등)
     seen_fb_storage_method = any(
         re.search(r'LX/[^;]+;->A0[0-9]\(Landroid/content/Context;I\)Ljava/io/File;',
                   r.get("sink", "") + r.get("source", ""))
@@ -2817,11 +2774,50 @@ def process_jsonl(input_path: str, output_path: str, verbose: bool=False, enable
         for r in rows
     )
 
+    # META-STORAGE-AUTO: FB_STORAGE_IDS를 사용하여 synthetic row 생성
+    # Instagram, Threads, Facebook 등 Meta 앱에서 app_*, lib-compressed 등 자동 발견
+    if pkg_name and (seen_fb_storage_method or seen_facebook_package):
+        for storage_id, subdir in FB_STORAGE_IDS.items():
+            stub_row = {
+                "tainted": False,
+                "matched_source_pattern": "",
+                "matched_sink_pattern": "",
+            }
+            rec = ext._ret_with_tokenization(
+                pkg_name,
+                caller=f"<synthetic_fb_storage_{storage_id}>",
+                source="<fb_storage_auto>",
+                sink="<synthetic_sink>",
+                artifact_path=f"File: /data/user/0/{pkg_name}/{subdir}",
+                row=stub_row,
+            )
+            rec["line"] = 0
+            rows.append(rec)
+
+        # META_STORAGE_IDS_DYNAMIC도 추가 (meta_storage_ids.json에서 로드된 경우)
+        for storage_id, subdir in META_STORAGE_IDS_DYNAMIC.items():
+            # FB_STORAGE_IDS에 이미 있으면 스킵
+            if storage_id in FB_STORAGE_IDS:
+                continue
+            stub_row = {
+                "tainted": False,
+                "matched_source_pattern": "",
+                "matched_sink_pattern": "",
+            }
+            rec = ext._ret_with_tokenization(
+                pkg_name,
+                caller=f"<synthetic_fb_storage_{storage_id}>",
+                source="<fb_storage_auto>",
+                sink="<synthetic_sink>",
+                artifact_path=f"File: /data/user/0/{pkg_name}/{subdir}",
+                row=stub_row,
+            )
+            rec["line"] = 0
+            rows.append(rec)
 
     ext.close()
 
     # Bytedance SDK 경로 후처리: /files → /cache 교체
-    # (중복 제거 전에 모두 수정)
     for r in rows:
         caller = r.get("caller", "")
         artifact_path = r.get("artifact_path", "")
@@ -2870,8 +2866,7 @@ def process_jsonl(input_path: str, output_path: str, verbose: bool=False, enable
     rows.extend(sdcard_storage_pairs)
 
 
-    # ✅ 여기에 추가:
-    # Instagram Lite 전용 강제 주입
+    # Instagram Lite 전용
     if pkg_name == "com.instagram.lite":
         INSTAGRAM_LITE_KNOWN_DIRS = [
             "app_appcomponents",
@@ -2897,7 +2892,6 @@ def process_jsonl(input_path: str, output_path: str, verbose: bool=False, enable
         
         print(f"[META-INJECT] ✓ {len(INSTAGRAM_LITE_KNOWN_DIRS)}개 검증된 경로 주입")
 
-    # (package, artifact_path) 기준 중복 제거
     unique: Dict[tuple[str, str], Dict[str, Any]] = {}
     for r in rows:
         key = (r.get("package", ""), r.get("artifact_path", ""))
@@ -2915,7 +2909,7 @@ def process_jsonl(input_path: str, output_path: str, verbose: bool=False, enable
         "artifact_path",
         "tainted",
         "matched_source_pattern",
-        "matched_sink_pattern",  # 추가 필드
+        "matched_sink_pattern",  
     ]
 
     if enable_tokenization:

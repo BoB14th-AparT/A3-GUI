@@ -42,17 +42,17 @@ def create_titlebar():
     layout.addStretch()
     
     # 오른쪽 아이콘들
-    for _ in range(7):
-        icon_btn = QPushButton()
-        icon_btn.setFixedSize(25, 25)
-        icon_btn.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                border: 1px solid #546e7a;
-                border-radius: 3px;
-            }
-        """)
-        layout.addWidget(icon_btn)
+    # for _ in range(7):
+    #     icon_btn = QPushButton()
+    #     icon_btn.setFixedSize(25, 25)
+    #     icon_btn.setStyleSheet("""
+    #         QPushButton {
+    #             background-color: transparent;
+    #             border: 1px solid #546e7a;
+    #             border-radius: 3px;
+    #         }
+    #     """)
+    #     layout.addWidget(icon_btn)
     
     titlebar.setLayout(layout)
     return titlebar

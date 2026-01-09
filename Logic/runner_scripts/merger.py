@@ -50,14 +50,14 @@ def merge_results(package_name, output_dir=None):
     
     work_dir = output_dir or os.getcwd()
     
-    # ✅ Export 폴더 구조
+    #  Export 폴더 구조
     export_dir = os.path.join(work_dir, "Export")
     
-    # ✅ 입력 파일 (Export 폴더 직속)
+    #  입력 파일 (Export 폴더 직속)
     static_csv = os.path.join(export_dir, f"static_{package_name}.csv")
-    dynamic_csv = os.path.join(export_dir, f"dynamic_{package_name}.csv")
-    
-    # ✅ 출력 파일 (Export 폴더 직속)
+    dynamic_csv = os.path.join(export_dir, f"db_dynamic_{package_name}.csv")
+
+    #  출력 파일 (Export 폴더 직속)
     os.makedirs(export_dir, exist_ok=True)
     output_csv = os.path.join(export_dir, f"merged_{package_name}.csv")
     
@@ -73,7 +73,7 @@ def merge_results(package_name, output_dir=None):
     # Dynamic은 선택적
     dynamic_set = load_path_set(dynamic_csv) if os.path.exists(dynamic_csv) else set()
     
-    # ✅ 병합 로직 (ADB 제거)
+    #  병합 로직 (ADB 제거)
     merged_paths = static_set | dynamic_set
     
     # 결과 저장

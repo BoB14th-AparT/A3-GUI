@@ -97,17 +97,17 @@ def run_static_analysis(apk_path, output_dir=None):
 
     safe_pkg_name = re.sub(r'[^\w\-.]', '_', package_name)
 
-    # Static Logic 디렉토리 찾기 (new_static 사용)
+    # Static Logic 디렉토리 찾기 (Static 사용)
     script_dir = Path(__file__).parent
-    static_dir = script_dir.parent / "new_static"
+    static_dir = script_dir.parent / "Static"
 
     if not static_dir.exists():
-        safe_print(f"[!] new_static 디렉토리를 찾을 수 없습니다: {static_dir}")
+        safe_print(f"[!] Static 디렉토리를 찾을 수 없습니다: {static_dir}")
         return None
 
-    safe_print(f"[+] new_static 디렉토리: {static_dir}")
+    safe_print(f"[+] Static 디렉토리: {static_dir}")
 
-    # ✅ Export 폴더 미리 생성 (4.5단계에서 필요)
+    # Export 폴더 미리 생성 (4.5단계에서 필요)
     original_dir = os.getcwd()
     
     if output_dir:
@@ -174,7 +174,7 @@ def run_static_analysis(apk_path, output_dir=None):
         
         # ADB 경로 추출
         if adb_extract_script.exists():
-            # ✅ adb_extraction.py는 대화형이므로 패키지명을 stdin으로 전달
+            #  adb_extraction.py는 대화형이므로 패키지명을 stdin으로 전달
             safe_print(f"\n[+] ADB 경로 추출 중...")
             safe_print(f"[+] 패키지: {package_name}")
             
@@ -208,7 +208,7 @@ def run_static_analysis(apk_path, output_dir=None):
                         adb_paths_file = str(sorted(adb_files)[-1])
                         safe_print(f"[+] ADB 파일: {adb_paths_file}")
                         
-                        # ✅ compare_paths.py 실행
+                        #  compare_paths.py 실행
                         if compare_script.exists():
                             safe_print(f"\n[+] Static vs ADB 비교 중...")
                             
@@ -220,7 +220,7 @@ def run_static_analysis(apk_path, output_dir=None):
                             )
                             
                             if run_cmd(cmd_compare, "ADB 검증"):
-                                safe_print("[+] ✅ ADB 검증 완료 - 일치하는 경로만 필터링됨")
+                                safe_print("[+]  ADB 검증 완료 - 일치하는 경로만 필터링됨")
                             else:
                                 safe_print("[WARN] ⚠️ ADB 비교 실패, 기존 필터 결과 사용")
                         else:
@@ -266,7 +266,7 @@ def run_static_analysis(apk_path, output_dir=None):
             
             safe_print("\n" + "=" * 60)
             safe_print("=== Static 분석 완료! ===")
-            safe_print(f"✅ 최종 출력: {output_path}")
+            safe_print(f" 최종 출력: {output_path}")
             safe_print(f"📁 중간 파일: {export_static_dir}") 
             safe_print("=" * 60)
             

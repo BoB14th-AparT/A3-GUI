@@ -33,29 +33,21 @@ if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-# Context + int + File 반환 메서드 시그니처 패턴 (조금 넓게)
 META_STORAGE_SIG_RE = re.compile(
     r"^LX/[^;]+;->[A-Z][0-9]+\(Landroid/content/Context;I\)Ljava/io/File;$"
-    r"^LX/[^;]+;->A0[0-9]\("  # A00~A09 메서드명
-    r"Landroid/content/Context;"  # 첫 번째 인자는 Context
-    r"[^)]*"  # 나머지 인자는 뭐든 OK (I, IZ, Z 등)
+    r"^LX/[^;]+;->A0[0-9]\(" 
+    r"Landroid/content/Context;"  
+    r"[^)]*" 
     r"\)"
-    r"(?:Ljava/io/File;|Ljava/lang/String;)$"  # File 또는 String 반환
+    r"(?:Ljava/io/File;|Ljava/lang/String;)$" 
 )
 
 def _looks_like_dir_name(s: str) -> bool:
-    """
-    storage_id_subdir.txt 기준으로:
-    - 공백이 없고
-    - 너무 긴 문장 아니고
-    - 에러 메시지/로그 문장처럼 보이는건 버림
-    - 슬래시(/)나 언더스코어, 알파벳/숫자 조합 정도만 허용
-    """
+
     if not s:
         return False
     s = s.strip()
 
-    # яв한 에러/로그 문장 컷
     if "unable to" in s.lower():
         return False
     if "failed" in s.lower():
@@ -63,21 +55,17 @@ def _looks_like_dir_name(s: str) -> bool:
     if "exception" in s.lower():
         return False
 
-    # 공백 들어가면 디렉터리 이름으로 보기 힘듦
     if " " in s:
         return False
 
-    # 너무 길면 문장일 가능성 ↑
     if len(s) > 64:
         return False
 
-    # 디렉터리 이름에 자주 나오는 문자만 허용
     for ch in s:
         if ch.isalnum():
             continue
         if ch in "._-/":
             continue
-        # 그 외 특수문자 섞여 있으면 일단 버림
         return False
 
     return True
@@ -146,9 +134,8 @@ def _extract_from_case_block(instructions: list, start_idx: int, end_labels: Set
         ("lib-compressed", "files") or None
     """
     dir_name = None
-    base_type = None  # "files", "cache", or None
+    base_type = None 
     
-    # case 블록은 보통 50줄 이내
     for i in range(start_idx, min(start_idx + 50, len(instructions))):
         ins = instructions[i]
         line = ins.get_output()
@@ -204,10 +191,10 @@ def extract_from_sparse_switch(method) -> Dict[int, str]:
     # Step 1: sparse-switch 테이블 파싱
     switch_data = _parse_sparse_switch_table(insns, ":sswitch_data_0")
     if not switch_data:
-        print("  ❌ sparse-switch 테이블 파싱 실패")
+        print("  sparse-switch 테이블 파싱 실패")
         return {}
     
-    print(f"  ✓ {len(switch_data)}개 case 발견")
+    print(f"  {len(switch_data)}개 case 발견")
     
     # Step 2: 각 case 블록에서 디렉터리 이름 추출
     mapping = {}
@@ -221,12 +208,11 @@ def extract_from_sparse_switch(method) -> Dict[int, str]:
         result = _extract_from_case_block(insns, label_idx, all_labels)
         if result:
             dir_name, base_type = result
-            # base_type에 따라 전체 경로 생성
             if base_type == "cache":
                 full_path = f"cache/{dir_name}"
             elif base_type == "external_files":
                 full_path = f"external_files/{dir_name}"
-            else:  # files 또는 unknown
+            else:  
                 full_path = f"files/{dir_name}"
             
             mapping[storage_id] = full_path
@@ -268,7 +254,6 @@ def _parse_sparse_switch_unified(payload_ins) -> List[int]:
         예: [0x6d6610a, 0x969066d, 0xb92ec5a, ...]
     """
     try:
-        # ✅ 수정: get_name()으로 instruction 타입 확인
         ins_name = payload_ins.get_name()
         print(f"[PARSE] Instruction name: {ins_name}")
         
@@ -276,7 +261,7 @@ def _parse_sparse_switch_unified(payload_ins) -> List[int]:
             print(f"[PARSE] ✗ 올바른 payload instruction이 아님 (name: {ins_name})")
             return []
         
-        # ✅ 수정: get_output()에서 16진수 값만 추출
+        # get_output()에서 16진수 값만 추출
         output = payload_ins.get_output().strip()
         print(f"[PARSE] Payload output: {output}")
         
@@ -291,15 +276,13 @@ def _parse_sparse_switch_unified(payload_ins) -> List[int]:
         storage_ids = []
         for part in parts:
             try:
-                # 16진수 값 파싱
                 val = int(part, 16)
                 storage_ids.append(val)
             except ValueError:
-                # 파싱 실패한 값은 건너뜀 (예: "sparse-switch-payload" 같은 텍스트)
                 continue
         
         print(f"[PARSE] ✓ {len(storage_ids)}개 storage ID 추출")
-        for i, sid in enumerate(storage_ids[:5]):  # 처음 5개만 출력
+        for i, sid in enumerate(storage_ids[:5]): 
             print(f"[PARSE]   [{i}] {sid:#x}")
         if len(storage_ids) > 5:
             print(f"[PARSE]   ... (+{len(storage_ids)-5}개 더)")
@@ -326,9 +309,8 @@ def _extract_dir_from_case_block(instructions: list, start_idx: int) -> Optional
         "cache/app_analytics" or "files/lib-compressed" or None
     """
     dir_name = None
-    base_type = None  # ✅ 수정: 기본값 None으로 변경
+    base_type = None 
     
-    # ✅ 수정: 범위 확장 (10 → 15)
     for i in range(start_idx, min(start_idx + 15, len(instructions))):
         ins = instructions[i]
         line = ins.get_output()
@@ -344,16 +326,13 @@ def _extract_dir_from_case_block(instructions: list, start_idx: int) -> Optional
         
         # const-string으로 디렉터리 이름 찾기
         if "const-string" in op:
-            # ✅ 수정: 정규식 순서 변경 (큰따옴표 우선)
             match = re.search(r'"([^"]+)"', line)
             if not match:
                 match = re.search(r"'([^']+)'", line)
             
             if match:
                 candidate = match.group(1)
-                # 디렉터리 이름 검증
                 if candidate and len(candidate) < 64 and " " not in candidate:
-                    # ✅ 추가: 에러 메시지 필터링
                     if "Storage config" not in candidate and "not in startup" not in candidate:
                         dir_name = candidate
         
@@ -368,7 +347,7 @@ def _extract_dir_from_case_block(instructions: list, start_idx: int) -> Optional
         if dir_name.startswith("cache/") or dir_name.startswith("files/"):
             return dir_name
         
-        # ✅ 수정: base_type이 None이면 추론
+        # base_type이 None이면 추론
         if not base_type:
             # 이름 기반 추론
             if "cache" in dir_name.lower() or dir_name.startswith("app_"):
@@ -423,20 +402,12 @@ def extract_meta_storage_universal(method) -> Dict[int, str]:
         
         # 3. payload 파싱 (storage ID 목록 추출)
         print(f"[UNIVERSAL] payload 파싱 시작...")
-        storage_ids = _parse_sparse_switch_unified(payload_ins)  # ← List[int] 반환!
+        storage_ids = _parse_sparse_switch_unified(payload_ins) 
         print(f"[UNIVERSAL] 파싱 완료: {len(storage_ids)}개 storage ID")
 
         if not storage_ids:
             print(f"[UNIVERSAL] ✗ payload 파싱 결과 없음")
             return {}
-
-        # 4. case 블록 위치 찾기 (payload 다음부터 순차 스캔)
-        # Facebook Lite 바이트코드를 보면:
-        #   idx=62: sparse-switch-payload
-        #   idx=12: const-string "lib-compressed"  ← 첫 번째 case
-        #   idx=14: const-string "app_secure_shared" ← 두 번째 case
-        #   ...
-        # 즉, payload 이후가 아니라 **switch 이후부터** case 블록 시작!
 
         print(f"\n[UNIVERSAL] case 블록 위치 계산 시작...")
 
@@ -469,7 +440,7 @@ def extract_meta_storage_universal(method) -> Dict[int, str]:
             case_idx = case_blocks[i]
             print(f"\n  [CASE] ID={storage_id:#x}, case_idx={case_idx}")
             
-            # ✅ 여기서부터는 기존 코드 유지!
+            # 여기서부터는 기존 코드 유지!
             dir_name = _extract_dir_from_case_block(insns, case_idx)
             
             if dir_name:
@@ -501,11 +472,9 @@ def find_meta_storage_classes(dx) -> List[str]:
         sys.stderr.flush()
         print(msg)
     
-    dual_print("\n" + "🎯"*40)
     dual_print("[FIND-META] find_meta_storage_classes() 호출됨!")
-    dual_print("🎯"*40 + "\n")
 
-    # ===== ✅ 추가: 알려진 클래스 하드코딩 체크 (빠른 경로) =====
+    # 알려진 클래스 하드코딩 체크 (빠른 경로) 
     KNOWN_CLASSES = {
         "LX/1AW;",   # Facebook
         "LX/BX8;",   # Instagram
@@ -518,7 +487,7 @@ def find_meta_storage_classes(dx) -> List[str]:
     known_found = []
     for cls_analysis in dx.get_classes():
         try:
-            cls = _get_vm_class(cls_analysis)  # ← 기존 헬퍼 함수 사용
+            cls = _get_vm_class(cls_analysis)  
             if not cls:
                 continue
             cls_name = cls.get_name()
@@ -530,8 +499,7 @@ def find_meta_storage_classes(dx) -> List[str]:
     
     if known_found:
         dual_print(f"[META-Auto] ✓ {len(known_found)}개 알려진 클래스 발견!")
-        dual_print("="*80 + "\n")
-        return known_found  # ← 여기서 즉시 리턴!
+        return known_found  
     
     # ===== 기존 로직 (하드코딩 실패 시에만 실행됨) =====
     dual_print("[META-Auto] 2단계: 패턴 기반 탐지...")
@@ -637,14 +605,12 @@ def find_meta_storage_classes(dx) -> List[str]:
             continue
     
     # ===== 최종 통계 =====
-    dual_print("\n" + "="*80)
     dual_print("[FIND-META] 스캔 완료!")
     dual_print(f"  총 메서드 수: {total_methods}")
     dual_print(f"  코드 있는 메서드: {methods_with_code}")
     dual_print(f"  Context 메서드: {context_file_methods}")
     dual_print(f"  Context+int→File: {len(context_int_file_methods)}개")
     dual_print(f"  최종 후보 클래스: {len(candidates)}개")
-    dual_print("="*80 + "\n")
 
     # ===== 디버그 출력 =====
     dual_print(f"\n[DEBUG] Context+int→File 메서드 총 {len(context_int_file_methods)}개:")
@@ -717,14 +683,13 @@ def analyze_context_file_methods(dx):
                 if 'const-string' in op:
                     output = insn.get_output()
                     if '"' in output:
-                        # "xxx" 형태에서 xxx 추출
                         parts = output.split('"')
                         if len(parts) >= 2:
                             strings_found.append(parts[1])
             
             if strings_found:
                 dual_print(f"  [STRINGS] {len(strings_found)}개 발견:")
-                for s in strings_found[:10]:  # 최대 10개만 출력
+                for s in strings_found[:10]:  
                     dual_print(f"    → {s}")
             else:
                 dual_print(f"  [STRINGS] 없음")
@@ -759,20 +724,18 @@ def dump_method_bytecode_detail(dx, target_signature: str):
         sys.stderr.flush()
         print(msg)
     
-    dual_print("\n" + "🔬"*40)
     dual_print(f"[BYTECODE-DUMP] 타겟: {target_signature}")
-    dual_print("🔬"*40 + "\n")
     
     target_found = False
     
     for ma in dx.get_methods():
         try:
             em = ma.get_method()
-            cls_name = em.get_class_name()  # ← 이미 "LX/0Ah;" 형태 (세미콜론 포함!)
+            cls_name = em.get_class_name() 
             method_name = em.get_name()
             desc = em.get_descriptor()
             
-            # ✅ 수정: 클래스 이름에 이미 세미콜론 있음
+            # 클래스 이름에 이미 세미콜론 있음
             full_sig = f"{cls_name}->{method_name}{desc}"
             
             # 정규화해서 비교 (공백/대소문자 무시)
@@ -797,31 +760,8 @@ def dump_method_bytecode_detail(dx, target_signature: str):
             insns = list(bc.get_instructions())
             
             dual_print(f"[INFO] 총 {len(insns)}개 instruction\n")
-            dual_print("="*80)
             
-            # 전체 바이트코드 덤프
-            for i, ins in enumerate(insns):
-                op = ins.get_name()
-                output = ins.get_output()
-                
-                # 중요 instruction 강조
-                marker = ""
-                if "const" in op:
-                    marker = "📌 "
-                elif "invoke" in op:
-                    marker = "🔧 "
-                elif "if-" in op:
-                    marker = "🔀 "
-                elif "return" in op:
-                    marker = "↩️  "
-                elif "sget" in op or "sput" in op:
-                    marker = "🗂️  "
-                elif "new-" in op:
-                    marker = "🆕 "
-                
-                dual_print(f"{marker}{i:4d} | {op:30s} | {output}")
-            
-            dual_print("\n" + "="*80)
+
             
             # 특수 패턴 분석
             dual_print("\n[PATTERN-ANALYSIS]")
@@ -870,11 +810,9 @@ def dump_method_bytecode_detail(dx, target_signature: str):
                 dual_print(f"\n✓ 조건 분기 {len(ifs)}개:")
                 for idx, output in ifs:
                     dual_print(f"  [{idx:4d}] {output}")
-            
-            dual_print("\n" + "🔬"*40)
+
             dual_print("[BYTECODE-DUMP] 완료!")
-            dual_print("🔬"*40 + "\n")
-            
+
             break
             
         except Exception as e:
@@ -887,7 +825,7 @@ def dump_method_bytecode_detail(dx, target_signature: str):
 def extract_meta_storage_ids_from_dex(dx) -> Dict[int, str]:
     import sys
     
-    msg = "\n" + "🔍"*40 + "\n[EXTRACT-META] Meta Storage 추출 시작\n" + "🔍"*40 + "\n"
+    msg = "\n" + "\n[EXTRACT-META] Meta Storage 추출 시작\n" +  "\n"
     sys.stderr.write(msg)
     sys.stderr.flush()
     print(msg)
@@ -895,7 +833,7 @@ def extract_meta_storage_ids_from_dex(dx) -> Dict[int, str]:
     meta_classes = find_meta_storage_classes(dx)
     
     if not meta_classes:
-        sys.stderr.write("[META-Auto] ❌ 클래스를 찾을 수 없음\n")
+        sys.stderr.write("[META-Auto] 클래스를 찾을 수 없음\n")
         sys.stderr.flush()
         return {}
     
@@ -923,8 +861,6 @@ def extract_meta_storage_ids_from_dex(dx) -> Dict[int, str]:
                 
                 print(f"  [SCAN] {method_name}{desc}")
                 
-                # ✅ 수정된 시그니처 체크 (공백 허용)
-                # 공백 제거 후 체크
                 desc_normalized = desc.replace(" ", "")
                 
                 is_storage_method = (
@@ -951,7 +887,7 @@ def extract_meta_storage_ids_from_dex(dx) -> Dict[int, str]:
                     print(f"  ✓ {len(extracted)}개 매핑 추출 (메서드: {em.get_name()})")
                     break
                 else:
-                    print(f"  ⚠️ 추출 결과 0개 (메서드는 찾았으나 데이터 없음)")
+                    print(f" 추출 결과 0개 (메서드는 찾았으나 데이터 없음)")
             
             except Exception as e:
                 print(f"  [ERROR] 메서드 처리 중 예외: {e}")
@@ -1028,7 +964,7 @@ JOIN_METHOD_PATTERNS = (
     "->addPathSegment(Ljava/lang/String;)",
     "->appendEncodedPath(Ljava/lang/String;)",
     "Ljava/nio/file/Path;->resolve(Ljava/lang/String;)",
-    "Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)",  # join처럼 취급
+    "Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)", 
     "Landroid/net/Uri;->withAppendedPath(",
 )
 
@@ -2245,9 +2181,8 @@ def track_with_interproc(dx,
                          max_insns: int,
                          want_full_trace: bool,
                          mem_log_path: str = "memory_trace.log",
-                         output_jsonl: str = None):  # 👈 추가!
-    # all_flows = []  # 👈 메모리 절약을 위해 제거!
-    flow_count = 0  # flow 개수만 카운트
+                         output_jsonl: str = None):
+    flow_count = 0  
 
     #  메모리 로그 초기화 (추가)
     method_counter = 0
@@ -2305,7 +2240,7 @@ def track_with_interproc(dx,
 
         #  메서드 카운터 증가 및 주기적 로그
         method_counter += 1
-        if method_counter % 100 == 0:  # 100개마다 로그
+        if method_counter % 100 == 0: 
             log_mem_to_file(method_counter, msig)
 
         code = m.get_code()
@@ -2422,9 +2357,9 @@ def track_with_interproc(dx,
                 callee = parse_invoke_callee(ins)
                 callee_n = norm_sig(callee) if callee else None
                 
-                args = parse_invoke_args(ins)  # 한 번만 파싱
+                args = parse_invoke_args(ins)  
                 
-                # ✅ 디버깅 코드 - reg_obj 직접 사용
+                # 디버깅 코드 - reg_obj 직접 사용
                 if callee_n and re.match(r"^LX/[^;]+;->A0[0-9]", callee_n):
                     print(f"[TAINT-A0X] {callee_n}")
                     print(f"  args: {args}")
@@ -2523,12 +2458,12 @@ def track_with_interproc(dx,
                 if is_file_constructor or is_other_join:
                     # File(File parent, String child)의 경우 args[1]=parent, args[2]=child (args[0]은 this)
                     if is_file_constructor and len(args) >= 3:
-                        this_reg   = args[0]  # ✅ 추가!
+                        this_reg   = args[0]  # 추가!
                         parent_reg = args[1]
                         child_reg  = args[2]
                     # 다른 join 메서드: args[0] = parent, args[1] = child
                     elif is_other_join and len(args) >= 2:
-                        this_reg   = None     # ✅ 추가!
+                        this_reg   = None     # 추가!
                         parent_reg = args[0]
                         child_reg  = args[1]
                     else:
@@ -2549,8 +2484,7 @@ def track_with_interproc(dx,
                         # 경로 결합
                         new_abs = f"{parent_abs.rstrip('/')}/{child_val.lstrip('/')}"
                         if is_file_constructor and this_reg is not None:
-                            #  기존에는 move-result 때까지 미루고 있었음
-                            #  생성자는 move-result가 없으니 여기서 바로 this_reg 넣어줌.
+                            #  기존 move-result 때까지 추출,생성자는 move-result가 없으니 여기서 바로 this_reg 넣어줌.
                             reg_obj[this_reg] = {"type": "Dir", "abs": new_abs}
                             add_struct(
                                 idx,
@@ -2732,7 +2666,6 @@ def track_with_interproc(dx,
                                                         param_bindings[fcallee_n][f_i_arg].append(reg_obj[dst].copy())
                                             break
                                     pending_invoke = None
-                                    # continue
                                 break
 
                 # 무인자 File 리턴 처리
@@ -2759,7 +2692,7 @@ def track_with_interproc(dx,
                                                 if f_r == dst and len(param_bindings[fcallee_n][f_i_arg]) < 5:
                                                     param_bindings[fcallee_n][f_i_arg].append(reg_obj[dst].copy())
                                         break
-                                # continue
+                            
                             if b.get("type") == "String" and b.get("value"):
                                 guessed = guess_base_dir_for_name(package, b["value"])
                                 reg_obj[dst] = {"type":"Dir","abs":guessed}
@@ -2804,7 +2737,7 @@ def track_with_interproc(dx,
 
                 # BASE_DIR_RULES 적용
                 if callee_n:
-                    # [FIX] Android API (getFilesDir, getCacheDir 등)는 항상 덮어쓰기
+                    # Android API (getFilesDir, getCacheDir 등)는 항상 덮어쓰기
                     # 다른 경로 계산은 이미 계산된 경우 스킵
                     is_android_dir_api = any(pattern in callee_n for pattern in [
                         'getFilesDir()', 'getCacheDir()', 'getExternalFilesDir()',
@@ -2899,23 +2832,15 @@ def integrate_meta_storage_extraction(dx, package_name: str, output_dir: str) ->
     """
     Meta 앱 자동 추출 통합 함수 (1203 메인에서 쓰던 것 그대로)
     """
-
-
-    # ===== 강제 로깅 시작 =====
     import sys
-    
-    sys.stderr.write("\n" + "="*80 + "\n")
     sys.stderr.write("[META-EXTRACTION] 시작!\n")
     sys.stderr.write(f"[META-EXTRACTION] 패키지: {package_name}\n")
     sys.stderr.write(f"[META-EXTRACTION] dx 객체: {type(dx)}\n")
-    sys.stderr.write("="*80 + "\n\n")
     sys.stderr.flush()
 
-    print("\n" + "="*80)
     print("[META-EXTRACTION] 시작!")
     print(f"[META-EXTRACTION] 패키지: {package_name}")
     print(f"[META-EXTRACTION] 출력 디렉터리: {output_dir}")
-    print("="*80 + "\n")
 
     # ===== 핵심: extract 함수 호출 전 로그 =====
     sys.stderr.write("[META-EXTRACTION] extract_meta_storage_ids_from_dex() 호출 시작...\n")
@@ -2929,7 +2854,7 @@ def integrate_meta_storage_extraction(dx, package_name: str, output_dir: str) ->
     print(f"[META-EXTRACTION] 추출 결과: {len(mapping)}개")
     
     if not mapping:
-        print("[META-ID] ❌ 추출 실패")
+        print("[META-ID] 추출 실패")
         
         # 대체 분석
         print("[META-FALLBACK] 메서드 상세 분석 시작...")
@@ -2940,8 +2865,6 @@ def integrate_meta_storage_extraction(dx, package_name: str, output_dir: str) ->
         
         # Facebook (정식 버전) - 예상 타겟
         if "facebook.katana" in package_name or package_name == "com.facebook.katana":
-            # 40개 중에서 가장 복잡한 메서드 선택 (instructions 많은 것)
-            # 로그에서 LX/002 같은 후보가 보였으므로 일단 스킵
             print("[INFO] Facebook 정식 버전 - 타겟 메서드 미확정 (LX/002 등 후보 있음)")
         
         # Instagram (정식 버전) - 예상 타겟
@@ -3018,7 +2941,7 @@ def main():
     ap.add_argument("--max-insns", type=int, default=12000)
     ap.add_argument("--full-trace", action="store_true")
     ap.add_argument("--debug", action="store_true")
-    ap.add_argument("--mem-log", default="memory_trace.log")  # ★ 메모리 버전에서 이미 있던 옵션
+    ap.add_argument("--mem-log", default="memory_trace.log")  
     args = ap.parse_args()
 
     global logger
@@ -3036,29 +2959,15 @@ def main():
     package_name = a.get_package() or "<pkg>"
     logger.log(f"[INFO] package = {package_name}")
 
-
-
-    # Meta storage debug JSON (debug_and_extract_meta_storage_ids)
-    # try:
-    #     meta_json_path = Path(args.out).with_name("meta_storage_ids_debug.json")
-    #     debug_and_extract_meta_storage_ids(dx, logger, str(meta_json_path))
-    # except Exception as e:
-    #     logger.log(f"[META-Debug] debug_and_extract_meta_storage_ids 실패: {e!r}")
-
-    # Meta storage config 자동 추출 (integrate_meta_storage_extraction)
     try:
         out_path = Path(args.out)
         output_dir = str(out_path.parent)
 
-        # ✅ stderr로 강제 출력 (subprocess 파이프를 우회)
-        sys.stderr.write("\n" + "⚙️"*40 + "\n")
+        # stderr로 강제 출력 (subprocess 파이프를 우회)
         sys.stderr.write("[MAIN] Meta Storage 추출 시작!\n")
-        sys.stderr.write("⚙️"*40 + "\n\n")
         sys.stderr.flush()
 
-        print("\n" + "⚙️"*40)  # ✅ 추가!
-        print("[MAIN] Meta Storage 추출 시작!")  # ✅ 추가!
-        print("⚙️"*40 + "\n")  # ✅ 추가!
+        print("[MAIN] Meta Storage 추출 시작!") 
 
         meta_storage_ids = integrate_meta_storage_extraction(
             dx=dx,
@@ -3069,21 +2978,21 @@ def main():
         sys.stderr.write(f"[MAIN] ✓ 추출 완료: {len(meta_storage_ids)}개\n")
         sys.stderr.flush()
 
-        print(f"[MAIN] ✓ 추출 완료, 결과: {meta_storage_ids}")  # ✅ 추가!
+        print(f"[MAIN] ✓ 추출 완료, 결과: {meta_storage_ids}")
 
 
         if meta_storage_ids:
             logger.log(f"[META-ID] ✓ {len(meta_storage_ids)}개 매핑 추출 성공")
         else:
-            print("[MAIN] ❌ meta_storage_ids가 비어있음!")  # ✅ 추가!
-            sys.stderr.write("[MAIN] ❌ meta_storage_ids가 비어있음!\n")
+            print("[MAIN] meta_storage_ids가 비어있음!")
+            sys.stderr.write("[MAIN] meta_storage_ids가 비어있음!\n")
             sys.stderr.flush()
     except Exception as e:
         sys.stderr.write(f"\n[ERROR] ===== Meta Storage 예외 =====\n")
         sys.stderr.write(f"[ERROR] {e}\n")
         sys.stderr.write(f"[ERROR] ==============================\n\n")
         sys.stderr.flush()
-        print(f"[ERROR] ===== Meta Storage 추출 중 예외 발생! =====")  # ✅ 강조!
+        print(f"[ERROR] ===== Meta Storage 추출 중 예외 발생! =====")
         print(f"[ERROR] 에러 메시지: {e}")
         print(f"[ERROR] 에러 타입: {type(e)}")
         logger.log(f"[WARN] Meta storage ID 추출 실패: {e!r}")

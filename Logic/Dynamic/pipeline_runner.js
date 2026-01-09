@@ -17,7 +17,7 @@ const { hideBin } = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv))
   .option('pkg', { type: 'string', demandOption: true, describe: 'Target package name' })
   .option('duration', { type: 'number', default: 300, describe: 'Duration per run (seconds)' })
-  .option('runs', { type: 'number', default: 3, describe: 'Number of runs' })
+  .option('runs', { type: 'number', default: 1, describe: 'Number of runs' })
   .option('spawn', { type: 'boolean', default: false, describe: 'Use Frida spawn mode' })
   .option('out', { type: 'string', default: './artifacts_output', describe: 'Output directory' })
   .option('ground-truth', { type: 'string', describe: 'Ground truth CSV file (e.g., adb_com.facebook.lite.csv)' })
@@ -493,7 +493,8 @@ async function classifyPathTypes(paths, packageName) {
     'mp4', 'mp3', 'pdf', 'zip', 'apk', 'so', 'dex', 'jar', 'conf',
     'ini', 'properties', 'key', 'pem', 'cert', 'html', 'css', 'js',
     'odex', 'vdex', 'oat', 'art', 'dat', 'idx', 'pack', 'bin',
-    'tmp', 'bak', 'cache', 'ttf', 'otf', 'woff', 'webp', 'svg'
+    'tmp', 'bak', 'cache', 'ttf', 'otf', 'woff', 'webp', 'svg',
+    'bkp', 'bakxz', 'pma', 'exo', 'store', 'prof', 'cnt', 'pb'
   ]);
 
   // 1단계: 휴리스틱으로 빠르게 분류
